@@ -12,7 +12,8 @@ public interface PdfaConvertable {
 	 * @param inputFile The file to convert.
 	 */
 	default void convert(File inputFile) {
-		throw new UnsupportedOperationException();
+		String msg = "Cannot process this file type: " + inputFile.getAbsolutePath();
+		throw new UnsupportedOperationException(msg);
 	};
 
 }

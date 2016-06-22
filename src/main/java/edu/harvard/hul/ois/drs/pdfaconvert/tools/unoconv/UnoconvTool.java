@@ -3,13 +3,10 @@
  */
 package edu.harvard.hul.ois.drs.pdfaconvert.tools.unoconv;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,8 +33,8 @@ public class UnoconvTool extends AbstractPdfaConverterTool implements PdfaConver
 	public UnoconvTool(String unoconvHome) {
 		super();
         logger.debug ("Initializing " + TOOL_NAME);
-        File unoconvDir = new File(unoconvHome);
         
+        File unoconvDir = new File(unoconvHome);
         logger.info(unoconvHome + " isDirectory: " + unoconvDir.isDirectory());
 
 		String command = unoconvHome  + "/unoconv";
@@ -45,7 +42,7 @@ public class UnoconvTool extends AbstractPdfaConverterTool implements PdfaConver
 		unixCommand.add(command);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.unoconv.PdfaConvertable#extractInfo(java.io.File)
 	 */
 	public void convert(File inputFile) {
@@ -55,42 +52,24 @@ public class UnoconvTool extends AbstractPdfaConverterTool implements PdfaConver
 
 		List<String> execCommand = new ArrayList<String>();
 		execCommand.addAll(unixCommand);
-
-//		execCommand.add("-h");
 		execCommand.add("-vv"); // for verbosity
 		execCommand.add("-f"); // PDF output format
 		execCommand.add("pdf");
 		execCommand.add("-eSelectPdfVersion=1"); // PDF/A output
 		String outputDir = PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP);
-		logger.debug("Have output directory: " + outputDir);
+		File outputDirectory = new File(outputDir);
+		logger.debug("Have output directory: " + outputDirectory.getAbsolutePath());
+		logger.debug("isDirectory: " + outputDirectory.isDirectory());
 		String outputFilename = inputFile.getName().substring(0, inputFile.getName().indexOf('.')); // '.pdf' suffix automatically added
 		logger.debug("outputFilename: " + outputFilename);
 		execCommand.add("-o"); // output location - directory or filename
-		execCommand.add(outputDir + outputFilename);
+		execCommand.add(outputDir + "/" + outputFilename);
 		execCommand.add(inputFile.getAbsolutePath());
 
-		logger.debug("Launching UnoconvTool, command = " + execCommand);
-        
-//		String execOut = exec(execCommand, null);
-//		logger.info("*** unoconv output:\n" + execOut);
-//		String[] outParts = execOut.split("\n");
-//		logger.debug("outParts size: {}", outParts.length);
-//		String format = null;
-//		for(String s : outParts) {
-//			s = s.toLowerCase();
-//			String[] lineParts = s.split("\t");
-//			if(lineParts[0].equalsIgnoreCase("filetype")) {
-//				format = lineParts[1].trim();
-//				logger.debug("format: {}", format);
-//				break;
-//			}
-//		}
+		logger.debug("About to launch UnoconvTool, command = " + execCommand);
 		
 		ByteArrayOutputStream baos = processCommand(execCommand, null);
 		try {
-//			FileWriter fw = new FileWriter(inputFile.getName() + ".txt");
-//			fw.write(execOut);
-//			fw.close();
 			FileOutputStream outFile = new FileOutputStream("unoconv-output.txt");
 			outFile.write(baos.toByteArray());
 			outFile.flush();
