@@ -5,8 +5,6 @@ package edu.harvard.hul.ois.drs.pdfaconvert.tools.unoconv;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,14 +67,8 @@ public class UnoconvTool extends AbstractPdfaConverterTool implements PdfaConver
 		logger.debug("About to launch UnoconvTool, command = " + execCommand);
 		
 		ByteArrayOutputStream baos = processCommand(execCommand, null);
-		try {
-			FileOutputStream outFile = new FileOutputStream("unoconv-output.txt");
-			outFile.write(baos.toByteArray());
-			outFile.flush();
-			outFile.close();
-		} catch(IOException ioe) {
-			logger.error("Uh oh...", ioe);
-		}
+		String logFilename = outputDir + "/unoconv-output.txt";
+		logApplicationOutput(logFilename, baos);
 		logger.debug("Finished running " + TOOL_NAME);
 		
 	}

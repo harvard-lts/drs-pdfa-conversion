@@ -5,8 +5,6 @@ package edu.harvard.hul.ois.drs.pdfaconvert.tools.calibre;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +24,7 @@ public class CalibreTool extends AbstractPdfaConverterTool implements PdfaConver
 
 	private static final String TOOL_NAME = "CalibreTool";
 	private static final String CALIBRE_COMMAND = "/ebook-convert";
-	private static final Logger logger = LogManager.getLogger();
+	public static final Logger logger = LogManager.getLogger();
 	
 	private List<String> unixCommand = new ArrayList<String>();
 
@@ -59,14 +57,8 @@ public class CalibreTool extends AbstractPdfaConverterTool implements PdfaConver
 
 		
 		ByteArrayOutputStream baos = processCommand(execCommand, null);
-		try {
-			FileOutputStream outFile = new FileOutputStream("calibre-output.txt");
-			outFile.write(baos.toByteArray());
-			outFile.flush();
-			outFile.close();
-		} catch(IOException ioe) {
-			logger.error("Uh oh...", ioe);
-		}
+		String logFilename = outputDir + "/calibre-output.txt";
+		logApplicationOutput(logFilename, baos);
 		logger.debug("Finished running " + TOOL_NAME);
 	}
 }

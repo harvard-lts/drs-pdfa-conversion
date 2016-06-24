@@ -208,7 +208,7 @@ public class PdfaConvert {
 				InputStream resourceStream = loader.getResourceAsStream(ApplicationConstants.PROJECT_PROPS);
 				applicationProps.load(resourceStream);
 				Enumeration<Object> keys = applicationProps.keys();
-				logger.info("*** applicationProps: ");
+				logger.info("applicationProps: ");
 				while (keys.hasMoreElements()) {
 					Object key = keys.nextElement();
 					logger.info("Key: {} -- value: {}", key, applicationProps.get(key));

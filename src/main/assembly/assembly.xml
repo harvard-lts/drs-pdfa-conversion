@@ -1,6 +1,7 @@
 <assembly>
 	<id>bin</id>
 	<formats>
+		<!-- Create one or more output formats -->
 		<format>zip</format>
 		<!-- <format>tar.gz</format> -->
 		<!-- <format>tar.bz2</format> -->
@@ -9,19 +10,20 @@
 		<dependencySet>
 			<unpack>false</unpack>
 			<scope>runtime</scope>
-			<!-- this excludes unnecessary Maven and related JAR files - - only those in <dependency> elements, not "test" scope are included -->
+			<!-- this excludes unnecessary Maven and related JAR files - - only those 
+				in <dependency> elements, not "test" scope are included -->
 			<useTransitiveDependencies>false</useTransitiveDependencies>
 			<outputDirectory>lib</outputDirectory>
 		</dependencySet>
 	</dependencySets>
-	<fileSets>
-		<fileSet>
-			<directory>scripts</directory>
+	<files>
+		<file>
+			<source>scripts/runJar.sh</source>
 			<outputDirectory>bin</outputDirectory>
-			<includes>
-				<include>*.sh</include>
-			</includes>
-		</fileSet>
+			<filtered>true</filtered> <!-- to filter in JAR file name to execute -->
+		</file>
+	</files>
+	<fileSets>
 		<fileSet>
 			<directory>${project.basedir}</directory>
 			<outputDirectory>/</outputDirectory>

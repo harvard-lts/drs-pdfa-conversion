@@ -5,8 +5,12 @@ package edu.harvard.hul.ois.drs.pdfaconvert.tools;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.harvard.hul.ois.drs.pdfaconvert.util.StreamGobbler;
 
@@ -17,6 +21,8 @@ import edu.harvard.hul.ois.drs.pdfaconvert.util.StreamGobbler;
  * @author dan179
  */
 public abstract class AbstractPdfaConverterTool {
+
+	private static final Logger logger = LogManager.getLogger();
 
 	protected AbstractPdfaConverterTool() {
 		super();
@@ -62,5 +68,19 @@ public abstract class AbstractPdfaConverterTool {
 			}
 		}
 		return bos;
+	}
+
+	/*
+	 * Log output from application performing the conversion, appending output if file already exists.
+	 */
+	protected void logApplicationOutput(String outputFilePath, ByteArrayOutputStream baos) {
+		try {
+			FileOutputStream outFile = new FileOutputStream(outputFilePath, true);
+			outFile.write(baos.toByteArray());
+			outFile.flush();
+			outFile.close();
+		} catch(IOException ioe) {
+			logger.error("Problem writing to application logging output:", ioe);
+		}
 	}
 }
