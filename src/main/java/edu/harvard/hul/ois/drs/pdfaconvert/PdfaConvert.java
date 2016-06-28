@@ -1,6 +1,7 @@
 package edu.harvard.hul.ois.drs.pdfaconvert;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +22,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,7 +41,9 @@ public class PdfaConvert {
 	private String unoconvHome;
 	private String pdfaPilotHome;
 	private String calibreHome;
-	
+
+	private static String applicationVersion;
+
 	private static final String PARAM_I = "i";
 
 	private static final String DOC_TYPE = "doc";
@@ -53,18 +57,19 @@ public class PdfaConvert {
 	private static final String WPD_TYPE = "wpd";
 
 	private static List<String> VALID_FILE_TYPES;
-	
+
 	private static final Logger logger;
 
 	static {
 		System.out.println("About to initialize Log4j");
 		logger = LogManager.getLogger();
 		System.out.println("Finished initializing Log4j");
-		VALID_FILE_TYPES = Arrays.asList(DOC_TYPE, DOCM_TYPE, DOCX_TYPE, EPUB_TYPE, ODT_TYPE, PDF_TYPE, RTF_TYPE, WP_TYPE, WPD_TYPE );
+		VALID_FILE_TYPES = Arrays.asList(DOC_TYPE, DOCM_TYPE, DOCX_TYPE, EPUB_TYPE, ODT_TYPE, PDF_TYPE, RTF_TYPE,
+				WP_TYPE, WPD_TYPE);
 	}
-	
+
 	public static void main(String[] args) throws IOException {
-		
+
 		logger.debug("Entering main()");
 
 		// WIP: the following command line code was pulled from FITS
@@ -82,15 +87,18 @@ public class PdfaConvert {
 			System.err.println(e.getMessage());
 			System.exit(1);
 		}
-		
+
 		// print version info
 		if (cmd.hasOption('v')) {
-			// TODO: expand this section
-			System.out.println("Here's the version info... TODO...");
-			System.out.println("Exiting...");
+			PdfaConvert convert = new PdfaConvert(); // for loading logging
+			setVersionFromFile();
+			if (StringUtils.isEmpty(applicationVersion)) {
+				applicationVersion = "<not set>";
+			}
+			System.out.println("Version: " + applicationVersion);
 			System.exit(0);
 		}
-		
+
 		// print help info
 		if (cmd.hasOption('h')) {
 			// TODO: expand this section
@@ -103,28 +111,29 @@ public class PdfaConvert {
 		if (cmd.hasOption(PARAM_I)) {
 			String input = cmd.getOptionValue(PARAM_I);
 			boolean hasValue = cmd.hasOption(PARAM_I);
-			logger.debug("*** Has option " + PARAM_I + " value: [" + hasValue + "]****");
+			logger.debug("Has option " + PARAM_I + " value: [" + hasValue + "]****");
 			String paramVal = cmd.getOptionValue(PARAM_I);
-			logger.debug("*** value of option: [" + paramVal + "] ****");
+			logger.debug("value of option: [" + paramVal + "] ****");
 
 			File inputFile = new File(input);
 			if (!inputFile.exists()) {
 				logger.warn(input + " does not exist or is not readable.");
 				System.exit(1);
 			}
-			
+
 			PdfaConvert convert = new PdfaConvert();
 			if (inputFile.isDirectory()) {
 				if (inputFile.listFiles() == null || inputFile.listFiles().length < 1) {
 					logger.warn("Input directory is empty, nothing to process.");
 					System.exit(1);
 				} else {
-					logger.debug("****Have directory: [" + inputFile.getAbsolutePath() + "] with file count: " + inputFile.listFiles().length);
+					logger.debug("Have directory: [" + inputFile.getAbsolutePath() + "] with file count: "
+							+ inputFile.listFiles().length);
 					DirectoryStream<Path> dirStream = null;
 					try {
 						dirStream = Files.newDirectoryStream(inputFile.toPath());
 						for (Path filePath : dirStream) {
-							logger.debug("****Have file name: " + filePath.toString());
+							logger.debug("Have file name: " + filePath.toString());
 							// Note: only handling files, not recursively going into sub-directories
 							if (filePath.toFile().isFile()) {
 								convert.examine(filePath.toFile());
@@ -152,35 +161,73 @@ public class PdfaConvert {
 
 		System.exit(0);
 	}
-	
+
+	  /*
+	   * Called from either main() for stand-alone application usage or constructor
+	   * when used by another program, this reads the properties file containing the
+	   * current version of FITS.
+	   *
+	   * Precondition of this method is that the static FITS_HOME has been set via
+	   * an environment variable, being passed into a constructor, or is just the current directory.
+	   */
+	  private static void setVersionFromFile() {
+
+			// get version properties file
+			ClassLoader loader = Thread.currentThread().getContextClassLoader();
+			try {
+				InputStream resourceStream = loader.getResourceAsStream(ApplicationConstants.VERSION_PROPS);
+				Properties versionProps = new Properties();
+				versionProps.load(resourceStream);
+				String version = versionProps.getProperty(ApplicationConstants.VERSION_KEY);
+				if (StringUtils.isEmpty(version)) {
+					version = "<not available>";
+				}
+				applicationVersion = version;
+				logger.debug("{} version: {}", PdfaConvert.class.getSimpleName(), applicationVersion);
+			} catch (IOException e) {
+				logger.error("Could not load properties file: " + ApplicationConstants.PROJECT_PROPS, e);
+			}
+	  }
+
 	public PdfaConvert() throws IOException {
+		this(null);
+	}
+
+	public PdfaConvert(String pdfaConverterHome) throws IOException {
 		super();
 
-	    // First look for a system property pointing to a project properties file.
-	    // This value can be either a file path, file protocol (e.g. - file:/path/to/file), or a URL (http://some/server/file).
-	    // If this value either is does not exist or is not valid, the default file that comes with this application will be used for initialization.
+		// Set the projects properties.
+		// First look for a system property pointing to a project properties file.
+		// This value can be either a file path, file protocol (e.g. - file:/path/to/file),
+		// or a URL (http://some/server/file).
+		// If this value either does not exist or is not valid, the default
+		// file that comes with this application will be used for initialization.
 		String environmentProjectPropsFile = System.getProperty(ApplicationConstants.ENV_PROJECT_PROPS);
-	    URI projectPropsUri = null;
-	    if (environmentProjectPropsFile != null) {
-	        try {
-	            projectPropsUri = new URI(environmentProjectPropsFile);
-	            // log4j system needs a scheme in the URI so convert to file if necessary.
-	            if (null == projectPropsUri.getScheme()) {
-	                File log4jProperties = new File(environmentProjectPropsFile);
-	                if (log4jProperties.exists() && log4jProperties.isFile()) {
-	                    projectPropsUri = log4jProperties.toURI();
-	                } else {
-	                    // No scheme and not a file - yikes!!! Let's bail and use fall-back file.
-	                    projectPropsUri = null;
-	                    throw new URISyntaxException(environmentProjectPropsFile, "Not a valid file");
-	                }
-	            }
-	        } catch (URISyntaxException e) {
-	            // fall back to FITS-supplied file
-	            System.err.println("Unable to load log4j.properties file: " + environmentProjectPropsFile + " -- reason: " + e.getReason());
-	            System.err.println("Falling back to default project.properties file: " + ApplicationConstants.PROJECT_PROPS);
-	        }
-	    }
+		URI projectPropsUri = null;
+		if (environmentProjectPropsFile != null) {
+			try {
+				projectPropsUri = new URI(environmentProjectPropsFile);
+				// log4j system needs a scheme in the URI so convert to file if
+				// necessary.
+				if (null == projectPropsUri.getScheme()) {
+					File log4jProperties = new File(environmentProjectPropsFile);
+					if (log4jProperties.exists() && log4jProperties.isFile()) {
+						projectPropsUri = log4jProperties.toURI();
+					} else {
+						// No scheme and not a file - yikes!!! Let's bail and
+						// use fall-back file.
+						projectPropsUri = null;
+						throw new URISyntaxException(environmentProjectPropsFile, "Not a valid file");
+					}
+				}
+			} catch (URISyntaxException e) {
+				// fall back to FITS-supplied file
+				System.err.println("Unable to load log4j.properties file: " + environmentProjectPropsFile
+						+ " -- reason: " + e.getReason());
+				System.err.println(
+						"Falling back to default project.properties file: " + ApplicationConstants.PROJECT_PROPS);
+			}
+		}
 
 		applicationProps = new Properties();
 
@@ -201,7 +248,7 @@ public class PdfaConvert {
 				}
 			}
 		}
-		
+
 		if (projectPropsUri == null) {
 			ClassLoader loader = Thread.currentThread().getContextClassLoader();
 			try {
@@ -219,14 +266,26 @@ public class PdfaConvert {
 				throw e;
 			}
 		}
-		
+
 		// load converter application locations
 		unoconvHome = applicationProps.getProperty(ApplicationConstants.UNOCONV_HOME_PROP);
 		pdfaPilotHome = applicationProps.getProperty(ApplicationConstants.PDFA_PILOT_HOME_PROP);
 		calibreHome = applicationProps.getProperty(ApplicationConstants.CALIBRE_HOME_PROP);
-		logger.debug("Converter homes:\n unconvHome: {}, pdfaPilotHome: {}, calibreHome: {}", unoconvHome, pdfaPilotHome, calibreHome);
+		logger.debug("Converter homes:\n unconvHome: {}, pdfaPilotHome: {}, calibreHome: {}", unoconvHome,
+				pdfaPilotHome, calibreHome);
+
+		setVersionFromFile();
 	}
-	
+
+	/**
+	 * Converts the input file to PDF format using the appropriate application.
+	 * 
+	 * @param inputFile
+	 *            - the input file to convert
+	 * @throws IllegalArgumentException
+	 *             if the input is either null or the file extension is one that
+	 *             cannot be handled by the current set of converters.
+	 */
 	public void examine(File inputFile) {
 		if (inputFile == null) {
 			logger.warn("Invalid null file -- no-op");
@@ -255,9 +314,12 @@ public class PdfaConvert {
 				converter = new PdfaPilotTool(pdfaPilotHome);
 				break;
 			default:
-				throw new RuntimeException("File type unknown. Cannot process: " + inputFile.getName());
+				throw new IllegalArgumentException("File type unknown. Cannot process: " + inputFile.getName());
 		}
 		converter.convert(inputFile);
-		
+	}
+	
+	public String getVersion() {
+		return applicationVersion;
 	}
 }
