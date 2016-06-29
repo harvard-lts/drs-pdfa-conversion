@@ -1,7 +1,6 @@
 package edu.harvard.hul.ois.drs.pdfaconvert;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,7 +89,7 @@ public class PdfaConvert {
 
 		// print version info
 		if (cmd.hasOption('v')) {
-			PdfaConvert convert = new PdfaConvert(); // for loading logging
+//			PdfaConvert convert = new PdfaConvert(); // for loading logging configuration
 			setVersionFromFile();
 			if (StringUtils.isEmpty(applicationVersion)) {
 				applicationVersion = "<not set>";
@@ -280,13 +279,14 @@ public class PdfaConvert {
 	/**
 	 * Converts the input file to PDF format using the appropriate application.
 	 * 
-	 * @param inputFile
-	 *            - the input file to convert
+	 * @param inputFile - the input file to convert
+	 * @return PdfaConverterOutput - Contains the input converted to PDF/A and other relevant data.
+	 * @throws GeneratedFileUnavailableException (RuntimeException) - If the generated file is either unavailable or unreadable.
 	 * @throws IllegalArgumentException
 	 *             if the input is either null or the file extension is one that
 	 *             cannot be handled by the current set of converters.
 	 */
-	public void examine(File inputFile) {
+	public PdfaConverterOutput examine(File inputFile) {
 		if (inputFile == null) {
 			logger.warn("Invalid null file -- no-op");
 			throw new IllegalArgumentException("inputFile parameter is null.");
@@ -316,7 +316,8 @@ public class PdfaConvert {
 			default:
 				throw new IllegalArgumentException("File type unknown. Cannot process: " + inputFile.getName());
 		}
-		converter.convert(inputFile);
+		PdfaConverterOutput output = converter.convert(inputFile);
+		return output;
 	}
 	
 	public String getVersion() {

@@ -12,7 +12,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import edu.harvard.hul.ois.drs.pdfaconvert.ApplicationConstants;
+import edu.harvard.hul.ois.drs.pdfaconvert.GeneratedFileUnavailableException;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConvert;
+import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConverterOutput;
 import edu.harvard.hul.ois.drs.pdfaconvert.tools.AbstractPdfaConverterTool;
 import edu.harvard.hul.ois.drs.pdfaconvert.tools.PdfaConvertable;
 
@@ -24,7 +26,7 @@ public class UnoconvTool extends AbstractPdfaConverterTool implements PdfaConver
 	private List<String> unixCommand = new ArrayList<String>();
 
 	private static final String TOOL_NAME = "UnoconvTool";
-	private boolean enabled = true;
+	private static final String TOOL_LOG_FILE_NAME = "unoconv-output.txt";
 
 	private static final Logger logger = LogManager.getLogger();
 
@@ -43,7 +45,7 @@ public class UnoconvTool extends AbstractPdfaConverterTool implements PdfaConver
 	/**
 	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.unoconv.PdfaConvertable#extractInfo(java.io.File)
 	 */
-	public void convert(File inputFile) {
+	public PdfaConverterOutput convert(File inputFile) {
         logger.debug(TOOL_NAME + ".extractInfo() starting on file: [" + inputFile.getName() + "]");
         logger.debug("file exists: " + inputFile.exists());
         logger.debug("file absolute path: " + inputFile.getAbsolutePath());
@@ -58,28 +60,22 @@ public class UnoconvTool extends AbstractPdfaConverterTool implements PdfaConver
 		File outputDirectory = new File(outputDir);
 		logger.debug("Have output directory: " + outputDirectory.getAbsolutePath());
 		logger.debug("isDirectory: " + outputDirectory.isDirectory());
-		String outputFilename = inputFile.getName().substring(0, inputFile.getName().indexOf('.')); // '.pdf' suffix automatically added
-		logger.debug("outputFilename: " + outputFilename);
+		String outputFilenameBase = inputFile.getName().substring(0, inputFile.getName().indexOf('.'));
+		String generatedPdfFilename = outputFilenameBase + ".pdf";
+		logger.debug("outputFilename: " + generatedPdfFilename);
 		execCommand.add("-o"); // output location - directory or filename
-		execCommand.add(outputDir + "/" + outputFilename);
+		execCommand.add(outputDir + File.separator + generatedPdfFilename);
 		execCommand.add(inputFile.getAbsolutePath());
 
 		logger.debug("About to launch UnoconvTool, command = " + execCommand);
-		
 		ByteArrayOutputStream baos = processCommand(execCommand, null);
-		String logFilename = outputDir + "/unoconv-output.txt";
+		String logFilename = outputDir + File.separator + TOOL_LOG_FILE_NAME;
 		logApplicationOutput(logFilename, baos);
-		logger.debug("Finished running " + TOOL_NAME);
 		
+		File pdfaOutputFile = retrieveGeneratedFile(outputDir, generatedPdfFilename);
+		PdfaConverterOutput converterOutput = new PdfaConverterOutput(pdfaOutputFile);		
+		logger.debug("Finished running " + TOOL_NAME);
+		return converterOutput;
 	}
-
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled(boolean value) {
-		enabled = value;
-	}
-
 
 }

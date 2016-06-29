@@ -12,6 +12,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import edu.harvard.hul.ois.drs.pdfaconvert.GeneratedFileUnavailableException;
 import edu.harvard.hul.ois.drs.pdfaconvert.util.StreamGobbler;
 
 /**
@@ -26,13 +27,6 @@ public abstract class AbstractPdfaConverterTool {
 
 	protected AbstractPdfaConverterTool() {
 		super();
-	}
-
-	protected String exec(List<String> cmd, File directory) throws RuntimeException {
-		String output = null;
-		ByteArrayOutputStream bos = processCommand(cmd, directory);
-			output = new String(bos.toByteArray());
-		return output;
 	}
 	
 	protected ByteArrayOutputStream processCommand(List<String> cmd, File directory) {
@@ -82,5 +76,20 @@ public abstract class AbstractPdfaConverterTool {
 		} catch(IOException ioe) {
 			logger.error("Problem writing to application logging output:", ioe);
 		}
+	}
+
+	/**
+	 * 
+	 * @param outputDirectory
+	 * @param outputFilename
+	 * @throws GeneratedFileUnavailableException If the file is not available to be returned.
+	 */
+	protected File retrieveGeneratedFile(String outputDirectory, String outputFilename) {
+		String filePath = outputDirectory + File.separator + outputFilename;
+		File generatedFile = new File(filePath);
+		if ( !generatedFile.isFile() || !generatedFile.canRead()) {
+			throw new GeneratedFileUnavailableException("The generated file [" + generatedFile + "] is not available to be returned.");
+		}
+		return generatedFile;
 	}
 }
