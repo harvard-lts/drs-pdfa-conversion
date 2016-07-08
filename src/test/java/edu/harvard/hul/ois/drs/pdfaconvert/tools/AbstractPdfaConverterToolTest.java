@@ -77,23 +77,13 @@ public class AbstractPdfaConverterToolTest {
 	
 	private AbstractPdfaConverterTool createAbstractPdfaConverterTool() {
 		return new AbstractPdfaConverterTool() {
-		};
-	}
-	
-	/**
-	 * Delete all temporary files created during testing.
-	 */
-	@AfterClass
-	public static void postTest() {
-		File directory = new File(tempDir);
-		if (directory.exists() && directory.isDirectory()) {
-			File[] files = directory.listFiles();
-			for (File f : files) {
-				f.delete();
+
+			@Override
+			protected String getToolName() {
+				return "Test AbstractPdfaConverterTool";
 			}
-		}
-		boolean tempDirDeleted = directory.delete();
-		logger.debug("temporary directory: [{}] deleted: {}", tempDir, tempDirDeleted);
+			
+		};
 	}
 	
 }

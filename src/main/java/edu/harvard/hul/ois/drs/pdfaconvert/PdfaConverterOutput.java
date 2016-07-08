@@ -13,13 +13,13 @@ import java.io.Serializable;
  */
 public class PdfaConverterOutput implements Serializable {
 	private static final long serialVersionUID = 6166711611392895982L;
+	
+	private File pdfaConvertedFile;
 
 	public PdfaConverterOutput(File pdfaConvertedFile) {
 		super();
 		this.pdfaConvertedFile = pdfaConvertedFile;
 	}
-
-	private File pdfaConvertedFile;
 
 	public File getPdfaConvertedFile() {
 		return pdfaConvertedFile;

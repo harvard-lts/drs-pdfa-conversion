@@ -15,13 +15,13 @@ import edu.harvard.hul.ois.drs.pdfaconvert.ApplicationConstants;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConvert;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConverterOutput;
 import edu.harvard.hul.ois.drs.pdfaconvert.tools.AbstractPdfaConverterTool;
-import edu.harvard.hul.ois.drs.pdfaconvert.tools.PdfaConvertable;
 
 /**
+ * Java wrapper for Calibre tool for converting EPUB documents into PDF/A.
+ * 
  * @author dan179
- *
  */
-public class CalibreTool extends AbstractPdfaConverterTool implements PdfaConvertable {
+public class CalibreTool extends AbstractPdfaConverterTool {
 
 	private static final String TOOL_NAME = "CalibreTool";
 	private static final String TOOL_LOG_FILE_NAME = "calibre-output.txt";
@@ -40,6 +40,11 @@ public class CalibreTool extends AbstractPdfaConverterTool implements PdfaConver
         String command = calibreHome + CALIBRE_COMMAND;
 		logger.debug("Have command: " + command);
 		unixCommand.add(command);
+	}
+
+	@Override
+	protected String getToolName() {
+		return TOOL_NAME;
 	}
 	
 	/**

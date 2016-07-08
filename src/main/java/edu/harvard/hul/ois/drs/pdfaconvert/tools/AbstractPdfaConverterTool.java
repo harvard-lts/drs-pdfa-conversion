@@ -12,6 +12,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import edu.harvard.hul.ois.drs.pdfaconvert.ExternalToolException;
 import edu.harvard.hul.ois.drs.pdfaconvert.GeneratedFileUnavailableException;
 import edu.harvard.hul.ois.drs.pdfaconvert.util.StreamGobbler;
 
@@ -21,7 +22,7 @@ import edu.harvard.hul.ois.drs.pdfaconvert.util.StreamGobbler;
  * 
  * @author dan179
  */
-public abstract class AbstractPdfaConverterTool {
+public abstract class AbstractPdfaConverterTool implements PdfaConvertable {
 
 	private static final Logger logger = LogManager.getLogger();
 
@@ -29,6 +30,16 @@ public abstract class AbstractPdfaConverterTool {
 		super();
 	}
 	
+	abstract protected String getToolName();
+	
+	/**
+	 * Executes the command on the external tool using the supplied directory if not <code>null</code>.
+	 * 
+	 * @param cmd - The command to execute
+	 * @param directory - The directory where to execute the command if not <code>null</code>.
+	 * @return The output from the executed tool.
+	 * @throws ExternalToolException - If there is a problem executing the command on the external tool.
+	 */
 	protected ByteArrayOutputStream processCommand(List<String> cmd, File directory) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		try {
@@ -48,17 +59,17 @@ public abstract class AbstractPdfaConverterTool {
 			proc.waitFor();
 		    errorGobbler.join();
 		    outputGobbler.join();
-		    //output = sb.toString();
 		    bos.flush();
 		}
-		catch (Exception e) {
-			throw new RuntimeException("Error calling external command line routine",e);
+		catch (IOException | InterruptedException e) {
+			throw new ExternalToolException("Error calling external command line tool: " + getToolName(), e);
 		}
 		finally {
 			try {
 				bos.close();
 			} catch (IOException e) {
-				throw new RuntimeException("Error closing external command line output stream",e);
+				// nothing really to do except log and proceed
+				logger.error("Couldn't close ByteArrayOutputStream", e);;
 			}
 		}
 		return bos;

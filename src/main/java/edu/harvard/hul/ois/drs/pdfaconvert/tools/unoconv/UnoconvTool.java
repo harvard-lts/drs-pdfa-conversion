@@ -12,16 +12,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import edu.harvard.hul.ois.drs.pdfaconvert.ApplicationConstants;
-import edu.harvard.hul.ois.drs.pdfaconvert.GeneratedFileUnavailableException;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConvert;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConverterOutput;
 import edu.harvard.hul.ois.drs.pdfaconvert.tools.AbstractPdfaConverterTool;
-import edu.harvard.hul.ois.drs.pdfaconvert.tools.PdfaConvertable;
 
 /**
+ * Java wrapper for Unoconv tool (which calls LibreOffice) for converting .doc, .docx, .odt, .rtf and .wpd documents into PDF/A.
+ * 
  * @author dan179
  */
-public class UnoconvTool extends AbstractPdfaConverterTool implements PdfaConvertable {
+public class UnoconvTool extends AbstractPdfaConverterTool {
 
 	private List<String> unixCommand = new ArrayList<String>();
 
@@ -41,6 +41,12 @@ public class UnoconvTool extends AbstractPdfaConverterTool implements PdfaConver
 		logger.info("Have command: " + command);
 		unixCommand.add(command);
 	}
+
+	@Override
+	protected String getToolName() {
+		return TOOL_NAME;
+	}
+
 
 	/**
 	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.unoconv.PdfaConvertable#extractInfo(java.io.File)

@@ -57,10 +57,14 @@ public class PdfaConvert {
 
 	private static List<String> VALID_FILE_TYPES;
 
-	private static final Logger logger;
+	private static Logger logger;
 
 	static {
 		System.out.println("About to initialize Log4j");
+        String log4jSystemProp = System.getProperty("log4j.configurationFile");
+        if (log4jSystemProp != null) {
+        	System.out.println("Attempting to load external log4j.configurationFile: " + log4jSystemProp);
+        }
 		logger = LogManager.getLogger();
 		System.out.println("Finished initializing Log4j");
 		VALID_FILE_TYPES = Arrays.asList(DOC_TYPE, DOCM_TYPE, DOCX_TYPE, EPUB_TYPE, ODT_TYPE, PDF_TYPE, RTF_TYPE,
@@ -68,6 +72,9 @@ public class PdfaConvert {
 	}
 
 	public static void main(String[] args) throws IOException {
+		System.out.println("About to initialize Log4j");
+		logger = LogManager.getLogger();
+		System.out.println("Finished initializing Log4j");
 
 		logger.debug("Entering main()");
 
@@ -89,7 +96,6 @@ public class PdfaConvert {
 
 		// print version info
 		if (cmd.hasOption('v')) {
-//			PdfaConvert convert = new PdfaConvert(); // for loading logging configuration
 			setVersionFromFile();
 			if (StringUtils.isEmpty(applicationVersion)) {
 				applicationVersion = "<not set>";
@@ -129,28 +135,34 @@ public class PdfaConvert {
 					logger.debug("Have directory: [" + inputFile.getAbsolutePath() + "] with file count: "
 							+ inputFile.listFiles().length);
 					DirectoryStream<Path> dirStream = null;
-					try {
 						dirStream = Files.newDirectoryStream(inputFile.toPath());
 						for (Path filePath : dirStream) {
 							logger.debug("Have file name: " + filePath.toString());
 							// Note: only handling files, not recursively going into sub-directories
 							if (filePath.toFile().isFile()) {
-								convert.examine(filePath.toFile());
+								// Catch possible exception for each file so can handle other files in directory.
+								try {
+									convert.examine(filePath.toFile());
+								} catch (Exception e) {
+									logger.error("Problem processing file: {} -- Error message: {}", filePath.getFileName(), e.getMessage());
+								} finally {
+									if (dirStream != null) {
+										dirStream.close();
+									}
+								}
 							} else {
 								logger.warn("Not a file so not processing: " + filePath.toString());
 							}
 						}
-					} catch (Exception e) {
-						logger.error("Caught exception: " + e);
-					} finally {
-						if (dirStream != null) {
-							dirStream.close();
-						}
-					}
 				}
 			} else {
 				logger.debug("About to process file: " + inputFile.getPath());
-				convert.examine(inputFile);
+				try {
+					convert.examine(inputFile);
+				} catch (Exception e) {
+					logger.error("Problem processing file: {} -- Error message: {}", inputFile.getName(), e.getMessage());
+					logger.debug("Problem processing file: {} -- Error message: {}", inputFile.getName(), e.getMessage(), e);
+				}
 			}
 		} else {
 			System.err.println("Missing required option: " + PARAM_I);
@@ -188,11 +200,11 @@ public class PdfaConvert {
 			}
 	  }
 
+	  /**
+	   * 
+	   * @throws IOException - If there is a problem reading in the application's properties file.
+	   */
 	public PdfaConvert() throws IOException {
-		this(null);
-	}
-
-	public PdfaConvert(String pdfaConverterHome) throws IOException {
 		super();
 
 		// Set the projects properties.
@@ -202,16 +214,16 @@ public class PdfaConvert {
 		// If this value either does not exist or is not valid, the default
 		// file that comes with this application will be used for initialization.
 		String environmentProjectPropsFile = System.getProperty(ApplicationConstants.ENV_PROJECT_PROPS);
+		logger.info("Have project.properties from environment: {}", environmentProjectPropsFile);
 		URI projectPropsUri = null;
 		if (environmentProjectPropsFile != null) {
 			try {
 				projectPropsUri = new URI(environmentProjectPropsFile);
-				// log4j system needs a scheme in the URI so convert to file if
-				// necessary.
+				// properties file needs a scheme in the URI so convert to file if necessary.
 				if (null == projectPropsUri.getScheme()) {
-					File log4jProperties = new File(environmentProjectPropsFile);
-					if (log4jProperties.exists() && log4jProperties.isFile()) {
-						projectPropsUri = log4jProperties.toURI();
+					File projectProperties = new File(environmentProjectPropsFile);
+					if (projectProperties.exists() && projectProperties.isFile()) {
+						projectPropsUri = projectProperties.toURI();
 					} else {
 						// No scheme and not a file - yikes!!! Let's bail and
 						// use fall-back file.
@@ -220,10 +232,10 @@ public class PdfaConvert {
 					}
 				}
 			} catch (URISyntaxException e) {
-				// fall back to FITS-supplied file
-				System.err.println("Unable to load log4j.properties file: " + environmentProjectPropsFile
+				// fall back to default file
+				logger.error("Unable to load properties file: " + environmentProjectPropsFile
 						+ " -- reason: " + e.getReason());
-				System.err.println(
+				logger.error(
 						"Falling back to default project.properties file: " + ApplicationConstants.PROJECT_PROPS);
 			}
 		}
@@ -253,17 +265,19 @@ public class PdfaConvert {
 			try {
 				InputStream resourceStream = loader.getResourceAsStream(ApplicationConstants.PROJECT_PROPS);
 				applicationProps.load(resourceStream);
-				Enumeration<Object> keys = applicationProps.keys();
-				logger.info("applicationProps: ");
-				while (keys.hasMoreElements()) {
-					Object key = keys.nextElement();
-					logger.info("Key: {} -- value: {}", key, applicationProps.get(key));
-				}
+				logger.info("loaded default applicationProps: ");
 			} catch (IOException e) {
 				logger.error("Could not load properties file: " + ApplicationConstants.PROJECT_PROPS, e);
 				// couldn't load default properties so bail...
 				throw e;
 			}
+		}
+		
+		logger.info("Have the following application properties:");
+		Enumeration<Object> keys = applicationProps.keys();
+		while (keys.hasMoreElements()) {
+			Object key = keys.nextElement();
+			logger.info("Key: {} -- value: {}", key, applicationProps.get(key));
 		}
 
 		// load converter application locations
@@ -281,10 +295,10 @@ public class PdfaConvert {
 	 * 
 	 * @param inputFile - the input file to convert
 	 * @return PdfaConverterOutput - Contains the input converted to PDF/A and other relevant data.
-	 * @throws GeneratedFileUnavailableException (RuntimeException) - If the generated file is either unavailable or unreadable.
-	 * @throws IllegalArgumentException
-	 *             if the input is either null or the file extension is one that
-	 *             cannot be handled by the current set of converters.
+	 * @throws GeneratedFileUnavailableException - If the generated file is either unavailable or unreadable.
+	 * @throws UnknownFileTypeException - The input file extension cannot be processed into a PDF/A.
+	 * @throws IllegalArgumentException - If the input is null.
+	 * @throws ExternalToolException - When there is a problem with the external tool being executed.
 	 */
 	public PdfaConverterOutput examine(File inputFile) {
 		if (inputFile == null) {
@@ -314,7 +328,7 @@ public class PdfaConvert {
 				converter = new PdfaPilotTool(pdfaPilotHome);
 				break;
 			default:
-				throw new IllegalArgumentException("File type unknown. Cannot process: " + inputFile.getName());
+				throw new UnknownFileTypeException("File type unknown. Cannot process: " + inputFile.getName());
 		}
 		PdfaConverterOutput output = converter.convert(inputFile);
 		return output;
