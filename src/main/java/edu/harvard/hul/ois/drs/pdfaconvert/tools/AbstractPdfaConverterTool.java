@@ -49,9 +49,6 @@ public abstract class AbstractPdfaConverterTool implements PdfaConvertable {
 	protected ByteArrayOutputStream processCommand(List<String> cmd, File directory) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		try {
-			//Runtime rt = Runtime.getRuntime();
-			//Process proc = rt.exec(cmd.toString());
-	
 			ProcessBuilder builder = new ProcessBuilder(cmd);
 			if(directory != null) {
 				builder.directory(directory);
@@ -66,9 +63,13 @@ public abstract class AbstractPdfaConverterTool implements PdfaConvertable {
 		    errorGobbler.join();
 		    outputGobbler.join();
 		    bos.flush();
+		    int exitCode = proc.exitValue();
+		    if (exitCode != 0) {
+		    	throw new ExternalToolException("Error executing external command line tool: " + getToolName() + " -- with exit code: " + exitCode);
+		    }
 		}
 		catch (IOException | InterruptedException e) {
-			throw new ExternalToolException("Error calling external command line tool: " + getToolName(), e);
+			throw new ExternalToolException("Error executing external command line tool: " + getToolName(), e);
 		}
 		finally {
 			try {

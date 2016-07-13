@@ -34,7 +34,7 @@ import edu.harvard.hul.ois.drs.pdfaconvert.UnknownFileTypeException;
  * 
  * @author dan179
  */
-@Ignore // ALWAYS uncomment before saving this class -- This is an integration test!
+//@Ignore // ALWAYS uncomment before saving this class -- This is an integration test!
 public class PdfaConvertIntegrationTest {
 
 	/*

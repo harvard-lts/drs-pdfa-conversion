@@ -52,7 +52,10 @@ public class PdfaConvert {
 
 	private static String applicationVersion;
 
+	// command line parameters
 	private static final String PARAM_I = "i";
+	private static final String PARAM_H = "h";
+	private static final String PARAM_V = "v";
 
 	private static final String DOC_TYPE = "doc";
 	private static final String DOCM_TYPE = "docm";
@@ -81,9 +84,11 @@ public class PdfaConvert {
 	}
 
 	public static void main(String[] args) throws IOException {
-		System.out.println("About to initialize Log4j");
-		logger = LogManager.getLogger();
-		System.out.println("Finished initializing Log4j");
+		if (logger == null) {
+			System.out.println("About to initialize Log4j");
+			logger = LogManager.getLogger();
+			System.out.println("Finished initializing Log4j");
+		}
 
 		logger.debug("Entering main()");
 
@@ -104,20 +109,19 @@ public class PdfaConvert {
 		}
 
 		// print version info
-		if (cmd.hasOption('v')) {
+		if (cmd.hasOption(PARAM_V)) {
 			setVersionFromFile();
 			if (StringUtils.isEmpty(applicationVersion)) {
 				applicationVersion = "<not set>";
+				System.exit(1);
 			}
 			System.out.println("Version: " + applicationVersion);
 			System.exit(0);
 		}
 
 		// print help info
-		if (cmd.hasOption('h')) {
-			// TODO: expand this section
-			System.out.println("Here's the help info... TODO...");
-			System.out.println("Exiting...");
+		if (cmd.hasOption(PARAM_H)) {
+			displayHelp();
 			System.exit(0);
 		}
 
@@ -154,15 +158,12 @@ public class PdfaConvert {
 									convert.examine(filePath.toFile());
 								} catch (Exception e) {
 									logger.error("Problem processing file: {} -- Error message: {}", filePath.getFileName(), e.getMessage());
-								} finally {
-									if (dirStream != null) {
-										dirStream.close();
-									}
 								}
 							} else {
-								logger.warn("Not a file so not processing: " + filePath.toString());
+								logger.warn("Not a file so not processing: " + filePath.toString()); // could be a directory but not recursing
 							}
 						}
+						dirStream.close();
 				}
 			} else {
 				logger.debug("About to process file: " + inputFile.getPath());
@@ -175,11 +176,18 @@ public class PdfaConvert {
 			}
 		} else {
 			System.err.println("Missing required option: " + PARAM_I);
-			// printHelp(options);
+			displayHelp();
 			System.exit(-1);
 		}
 
 		System.exit(0);
+	}
+	
+	private static void displayHelp() {
+		System.out.println("PDF/A Utility help");
+		System.out.println("-i follow by path to input file to process");
+		System.out.println("-v for version of this application");
+		System.out.println("-h to display this help");
 	}
 
 	  /*

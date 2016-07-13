@@ -9,8 +9,13 @@
 		</File>
 	</Appenders>
 	<Loggers>
-		<Logger name="org.apache.log4j.xml" level="info" />
-		<Root level="debug">
+		<Logger name="edu.harvard.hul.ois.drs.pdfaconvert" level="info" additivity="false">
+		    <AppenderRef ref="STDOUT"/>
+		</Logger>
+        <Logger name="edu.harvard.hul.ois.drs.pdfaconvert" level="debug" additivity="false">
+            <AppenderRef ref="FILEOUT"/>
+        </Logger>
+		<Root level="error">
 			<AppenderRef ref="STDOUT" />
             <AppenderRef ref="FILEOUT" />
 		</Root>
