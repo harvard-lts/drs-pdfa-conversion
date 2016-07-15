@@ -301,9 +301,17 @@ public class PdfaConvert {
 		unoconvHome = applicationProps.getProperty(ApplicationConstants.UNOCONV_HOME_PROP);
 		pdfaPilotHome = applicationProps.getProperty(ApplicationConstants.PDFA_PILOT_HOME_PROP);
 		calibreHome = applicationProps.getProperty(ApplicationConstants.CALIBRE_HOME_PROP);
+		String outputDir = PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP);
 		logger.debug("Converter homes:\n unconvHome: {}, pdfaPilotHome: {}, calibreHome: {}", unoconvHome,
 				pdfaPilotHome, calibreHome);
-
+		File outputDirFile = new File(outputDir);
+		boolean outputDirExists = outputDirFile.exists();
+		logger.debug("Output directory for PDF files and external application log files: {}  -- exists: {}", outputDir, outputDirExists);
+		// ensure output directory exists
+		if (!outputDirExists) {
+			outputDirFile.mkdir();
+			logger.debug("Created output directory: {}", outputDirFile.getAbsolutePath());
+		}
 		setVersionFromFile();
 	}
 

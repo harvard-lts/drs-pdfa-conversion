@@ -24,6 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import edu.harvard.hul.ois.drs.pdfaconvert.ApplicationConstants;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConvert;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConverterOutput;
 import edu.harvard.hul.ois.drs.pdfaconvert.UnknownFileTypeException;
@@ -75,7 +76,7 @@ public class PdfaConvertIntegrationTest {
 		PdfaConverterOutput output = converter.examine(inputFile);
 		String basicFilename = inputFilename.substring(0, inputFilename.indexOf('.'));
 		String expectedFilename = basicFilename + ".pdf";
-		File outputFile = new File("target" + File.separator + expectedFilename);
+		File outputFile = new File(PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP) + File.separator + expectedFilename);
 		assertNotNull(outputFile);
 		assertTrue(outputFile.exists());
 		assertTrue(outputFile.isFile());
@@ -104,7 +105,7 @@ public class PdfaConvertIntegrationTest {
 		PdfaConverterOutput output = converter.examine(inputFile);
 		String basicFilename = inputFilename.substring(0, inputFilename.indexOf('.'));
 		String expectedFilename = basicFilename + ".pdf";
-		File outputFile = new File("target" + File.separator + expectedFilename);
+		File outputFile = new File(PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP) + File.separator + expectedFilename);
 		assertNotNull(outputFile);
 		assertTrue(outputFile.exists());
 		assertTrue(outputFile.isFile());
@@ -132,7 +133,7 @@ public class PdfaConvertIntegrationTest {
 
 		converter.examine(inputFile);
 		String basicFilename = inputFilename.substring(0, inputFilename.indexOf('.'));
-		File outputFile = new File("target" + File.separator + basicFilename + ".pdf");
+		File outputFile = new File(PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP) + File.separator + basicFilename + ".pdf");
 		assertNotNull(outputFile);
 		assertTrue(outputFile.exists());
 		assertTrue(outputFile.isFile());
