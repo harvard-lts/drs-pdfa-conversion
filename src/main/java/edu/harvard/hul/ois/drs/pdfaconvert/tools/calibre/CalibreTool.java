@@ -38,13 +38,13 @@ public class CalibreTool extends AbstractPdfaConverterTool {
 
 	public CalibreTool(String calibreHome) {
 		super();
-		logger.debug("Entering C-tor for: " + CalibreTool.class.getSimpleName());
+		logger.debug("Entering C-tor for: {}", CalibreTool.class.getSimpleName());
         
         File calibreHomeDir = new File(calibreHome);
-        logger.info(calibreHome + " isDirectory: " + calibreHomeDir.isDirectory());
+        logger.info("Calibre home: {} -- isDirectory: ", calibreHome, (calibreHome == null ? "false" : calibreHomeDir.isDirectory()) );
 
         String command = calibreHome + CALIBRE_COMMAND;
-		logger.debug("Have command: " + command);
+		logger.debug("Have command: {}", command);
 		unixCommand.add(command);
 	}
 
@@ -57,10 +57,11 @@ public class CalibreTool extends AbstractPdfaConverterTool {
 	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.unoconv.PdfaConvertable#extractInfo(java.io.File)
 	 */
 	public PdfaConverterOutput convert(File inputFile) {
-        logger.debug(TOOL_NAME + ".extractInfo() starting on file: [" + inputFile.getName() + "]");
-        logger.debug("file exists: " + inputFile.exists());
-        logger.debug("file absolute path: " + inputFile.getAbsolutePath());
-		List<String> execCommand = new ArrayList<String>();
+        logger.debug("{}.extractInfo() starting on file: [{}]", TOOL_NAME, inputFile);
+        logger.debug("file exists: {}", inputFile.exists());
+        logger.debug("file absolute path: {}", inputFile.getAbsolutePath());
+
+        List<String> execCommand = new ArrayList<String>();
 		execCommand.addAll(unixCommand);
 		execCommand.add(inputFile.getAbsolutePath()); // input file first
 		String outputDir = PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP);
@@ -68,14 +69,14 @@ public class CalibreTool extends AbstractPdfaConverterTool {
 		String generatedPdfFilename = outputFilenameBase + ".pdf";
 		execCommand.add(outputDir + File.separator + generatedPdfFilename);
 		
-		logger.debug("Launching CalibreTool, command = " + execCommand);
+		logger.debug("Launching {}, with command: {}",  TOOL_NAME, execCommand);
 		ByteArrayOutputStream baos = processCommand(execCommand, null);
 		String logFilename = outputDir + File.separator + TOOL_LOG_FILE_NAME;
 		logApplicationOutput(logFilename, baos);
 
 		File pdfaOutputFile = retrieveGeneratedFile(outputDir, generatedPdfFilename);
 		PdfaConverterOutput converterOutput = new PdfaConverterOutput(pdfaOutputFile);		
-		logger.debug("Finished running " + TOOL_NAME);
+		logger.debug("Finished running {}", TOOL_NAME);
 		return converterOutput;
 	}
 }

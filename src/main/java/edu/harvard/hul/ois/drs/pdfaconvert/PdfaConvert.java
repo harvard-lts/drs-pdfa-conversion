@@ -129,13 +129,13 @@ public class PdfaConvert {
 		if (cmd.hasOption(PARAM_I)) {
 			String input = cmd.getOptionValue(PARAM_I);
 			boolean hasValue = cmd.hasOption(PARAM_I);
-			logger.debug("Has option " + PARAM_I + " value: [" + hasValue + "]****");
+			logger.debug("Has option {} value: [{}]", PARAM_I, hasValue);
 			String paramVal = cmd.getOptionValue(PARAM_I);
-			logger.debug("value of option: [" + paramVal + "] ****");
+			logger.debug("value of option: [{}] ****", paramVal);
 
 			File inputFile = new File(input);
 			if (!inputFile.exists()) {
-				logger.warn(input + " does not exist or is not readable.");
+				logger.warn("{} does not exist or is not readable.", input);
 				System.exit(1);
 			}
 
@@ -145,12 +145,11 @@ public class PdfaConvert {
 					logger.warn("Input directory is empty, nothing to process.");
 					System.exit(1);
 				} else {
-					logger.debug("Have directory: [" + inputFile.getAbsolutePath() + "] with file count: "
-							+ inputFile.listFiles().length);
+					logger.debug("Have directory: [{}] with file count: {}", inputFile.getAbsolutePath(), inputFile.listFiles().length);
 					DirectoryStream<Path> dirStream = null;
 						dirStream = Files.newDirectoryStream(inputFile.toPath());
 						for (Path filePath : dirStream) {
-							logger.debug("Have file name: " + filePath.toString());
+							logger.debug("Have file name: {}", filePath.toString());
 							// Note: only handling files, not recursively going into sub-directories
 							if (filePath.toFile().isFile()) {
 								// Catch possible exception for each file so can handle other files in directory.
@@ -160,13 +159,13 @@ public class PdfaConvert {
 									logger.error("Problem processing file: {} -- Error message: {}", filePath.getFileName(), e.getMessage());
 								}
 							} else {
-								logger.warn("Not a file so not processing: " + filePath.toString()); // could be a directory but not recursing
+								logger.warn("Not a file so not processing: {}", filePath.toString()); // could be a directory but not recursing
 							}
 						}
 						dirStream.close();
 				}
 			} else {
-				logger.debug("About to process file: " + inputFile.getPath());
+				logger.debug("About to process file: {}", inputFile.getPath());
 				try {
 					convert.examine(inputFile);
 				} catch (Exception e) {
@@ -213,7 +212,7 @@ public class PdfaConvert {
 				applicationVersion = version;
 				logger.debug("{} version: {}", PdfaConvert.class.getSimpleName(), applicationVersion);
 			} catch (IOException e) {
-				logger.error("Could not load properties file: " + ApplicationConstants.PROJECT_PROPS, e);
+				logger.error("Could not load properties file: {}", ApplicationConstants.PROJECT_PROPS, e);
 			}
 	  }
 
@@ -250,10 +249,8 @@ public class PdfaConvert {
 				}
 			} catch (URISyntaxException e) {
 				// fall back to default file
-				logger.error("Unable to load properties file: " + environmentProjectPropsFile
-						+ " -- reason: " + e.getReason());
-				logger.error(
-						"Falling back to default project.properties file: " + ApplicationConstants.PROJECT_PROPS);
+				logger.error("Unable to load properties file: {} -- reason: {}", environmentProjectPropsFile, e.getReason());
+				logger.error("Falling back to default project.properties file: {}", ApplicationConstants.PROJECT_PROPS);
 			}
 		}
 
@@ -266,7 +263,7 @@ public class PdfaConvert {
 				Reader reader;
 				try {
 					reader = new FileReader(envPropFile);
-					logger.info("About to load project.properties from environment: " + envPropFile.getAbsolutePath());
+					logger.info("About to load project.properties from environment: {}", envPropFile.getAbsolutePath());
 					applicationProps.load(reader);
 					logger.info("Success -- loaded properties file.");
 				} catch (IOException e) {
@@ -284,7 +281,7 @@ public class PdfaConvert {
 				applicationProps.load(resourceStream);
 				logger.info("loaded default applicationProps: ");
 			} catch (IOException e) {
-				logger.error("Could not load properties file: " + ApplicationConstants.PROJECT_PROPS, e);
+				logger.error("Could not load properties file: {}", ApplicationConstants.PROJECT_PROPS, e);
 				// couldn't load default properties so bail...
 				throw e;
 			}
