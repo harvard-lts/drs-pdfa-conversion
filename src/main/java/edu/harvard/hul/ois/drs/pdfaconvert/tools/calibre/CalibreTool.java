@@ -17,8 +17,6 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import edu.harvard.hul.ois.drs.pdfaconvert.ApplicationConstants;
-import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConvert;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConverterOutput;
 import edu.harvard.hul.ois.drs.pdfaconvert.tools.AbstractPdfaConverterTool;
 
@@ -36,8 +34,8 @@ public class CalibreTool extends AbstractPdfaConverterTool {
 	
 	private List<String> unixCommand = new ArrayList<String>();
 
-	public CalibreTool(String calibreHome) {
-		super();
+	public CalibreTool(String calibreHome, File outputDir) {
+		super(outputDir);
 		logger.debug("Entering C-tor for: {}", CalibreTool.class.getSimpleName());
         
         File calibreHomeDir = new File(calibreHome);
@@ -64,18 +62,19 @@ public class CalibreTool extends AbstractPdfaConverterTool {
         List<String> execCommand = new ArrayList<String>();
 		execCommand.addAll(unixCommand);
 		execCommand.add(inputFile.getAbsolutePath()); // input file first
-		String outputDir = PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP);
+
 		String outputFilenameBase = inputFile.getName().substring(0, inputFile.getName().indexOf('.'));
 		String generatedPdfFilename = outputFilenameBase + ".pdf";
-		execCommand.add(outputDir + File.separator + generatedPdfFilename);
+		execCommand.add( getOutputDirectory() + File.separator + generatedPdfFilename);
 		
 		logger.debug("Launching {}, with command: {}",  TOOL_NAME, execCommand);
 		ByteArrayOutputStream baos = processCommand(execCommand, null);
-		String logFilename = outputDir + File.separator + TOOL_LOG_FILE_NAME;
+		String logFilename = getOutputDirectory() + File.separator + TOOL_LOG_FILE_NAME;
 		logApplicationOutput(logFilename, baos);
 
-		File pdfaOutputFile = retrieveGeneratedFile(outputDir, generatedPdfFilename);
-		PdfaConverterOutput converterOutput = new PdfaConverterOutput(pdfaOutputFile);		
+		File pdfaOutputFile = retrieveGeneratedFile( getOutputDirectory(), generatedPdfFilename);
+		String toolOutput = getToolLoggingOutput(baos);
+		PdfaConverterOutput converterOutput = new PdfaConverterOutput(pdfaOutputFile, toolOutput);		
 		logger.debug("Finished running {}", TOOL_NAME);
 		return converterOutput;
 	}

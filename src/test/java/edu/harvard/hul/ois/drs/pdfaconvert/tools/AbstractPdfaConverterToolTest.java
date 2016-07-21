@@ -81,7 +81,7 @@ public class AbstractPdfaConverterToolTest {
 	}
 	
 	private AbstractPdfaConverterTool createAbstractPdfaConverterTool() {
-		return new AbstractPdfaConverterTool() {
+		return new AbstractPdfaConverterTool(null) {
 
 			@Override
 			protected String getToolName() {

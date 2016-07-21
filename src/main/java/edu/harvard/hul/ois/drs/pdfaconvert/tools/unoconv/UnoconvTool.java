@@ -17,8 +17,6 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import edu.harvard.hul.ois.drs.pdfaconvert.ApplicationConstants;
-import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConvert;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConverterOutput;
 import edu.harvard.hul.ois.drs.pdfaconvert.tools.AbstractPdfaConverterTool;
 
@@ -33,17 +31,18 @@ public class UnoconvTool extends AbstractPdfaConverterTool {
 
 	private static final String TOOL_NAME = "UnoconvTool";
 	private static final String TOOL_LOG_FILE_NAME = "unoconv-output.txt";
+	private static final String UNOCONV_COMMAND = "unoconv";
 
 	private static final Logger logger = LogManager.getLogger();
 
-	public UnoconvTool(String unoconvHome) {
-		super();
+	public UnoconvTool(String unoconvHome, File outputDir) {
+		super(outputDir);
 		logger.debug("Entering C-tor for: {}", UnoconvTool.class.getSimpleName());
         
         File unoconvDir = new File(unoconvHome);
         logger.info("Unoconv home: {} -- isDirectory: ", unoconvHome, (unoconvHome == null ? "false" : unoconvDir.isDirectory()) );
 
-		String command = unoconvHome  + "/unoconv";
+		String command = unoconvHome + File.separatorChar + UNOCONV_COMMAND;
 		logger.info("Have command: {}", command);
 		unixCommand.add(command);
 	}
@@ -68,24 +67,22 @@ public class UnoconvTool extends AbstractPdfaConverterTool {
 		execCommand.add("-f"); // PDF output format
 		execCommand.add("pdf");
 		execCommand.add("-eSelectPdfVersion=1"); // PDF/A output
-		String outputDir = PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP);
-		File outputDirectory = new File(outputDir);
-		logger.debug("Have output directory: {}", outputDirectory.getAbsolutePath());
-		logger.debug("isDirectory: {}", outputDirectory.isDirectory());
+
 		String outputFilenameBase = inputFile.getName().substring(0, inputFile.getName().indexOf('.'));
 		String generatedPdfFilename = outputFilenameBase + ".pdf";
 		logger.debug("outputFilename: {}", generatedPdfFilename);
 		execCommand.add("-o"); // output location - directory or filename
-		execCommand.add(outputDir + File.separator + generatedPdfFilename);
+		execCommand.add( getOutputDirectory() + File.separator + generatedPdfFilename);
 		execCommand.add(inputFile.getAbsolutePath());
 
 		logger.debug("About to launch {}, command: {}", TOOL_NAME, execCommand);
 		ByteArrayOutputStream baos = processCommand(execCommand, null);
-		String logFilename = outputDir + File.separator + TOOL_LOG_FILE_NAME;
+		String logFilename = getOutputDirectory() + File.separator + TOOL_LOG_FILE_NAME;
 		logApplicationOutput(logFilename, baos);
 		
-		File pdfaOutputFile = retrieveGeneratedFile(outputDir, generatedPdfFilename);
-		PdfaConverterOutput converterOutput = new PdfaConverterOutput(pdfaOutputFile);		
+		File pdfaOutputFile = retrieveGeneratedFile( getOutputDirectory(), generatedPdfFilename);
+		String toolOutput = getToolLoggingOutput(baos);
+		PdfaConverterOutput converterOutput = new PdfaConverterOutput(pdfaOutputFile, toolOutput);		
 		logger.debug("Finished running {}", TOOL_NAME);
 		return converterOutput;
 	}

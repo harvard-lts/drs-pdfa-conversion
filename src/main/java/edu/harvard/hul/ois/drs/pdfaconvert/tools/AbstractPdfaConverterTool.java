@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -29,14 +30,28 @@ import edu.harvard.hul.ois.drs.pdfaconvert.util.StreamGobbler;
  * @author dan179
  */
 public abstract class AbstractPdfaConverterTool implements PdfaConvertable {
+	
+	// the sub-directory within the output directory for storing converted documents
+	private File outputDir;
 
 	private static final Logger logger = LogManager.getLogger();
 
-	protected AbstractPdfaConverterTool() {
+	protected AbstractPdfaConverterTool(File outputDir) {
 		super();
+		this.outputDir = outputDir;
 	}
 	
 	abstract protected String getToolName();
+	
+	/**
+	 * Output directory for converted files. May be a sub-directory of the value configured in properties file.
+	 * Does not contain a trailing slash character.
+	 * 
+	 * @return The path to directory where converted file will be placed.
+	 */
+	protected String getOutputDirectory() {
+		return outputDir.getAbsolutePath();
+	}
 	
 	/**
 	 * Executes the command on the external tool using the supplied directory if not <code>null</code>.
@@ -94,6 +109,12 @@ public abstract class AbstractPdfaConverterTool implements PdfaConvertable {
 		} catch(IOException ioe) {
 			logger.error("Problem writing to application logging output:", ioe);
 		}
+	}
+	
+	protected String getToolLoggingOutput(ByteArrayOutputStream baos) {
+		StringWriter sw = new StringWriter();
+		sw.append(baos.toString());
+		return sw.toString();
 	}
 
 	/**

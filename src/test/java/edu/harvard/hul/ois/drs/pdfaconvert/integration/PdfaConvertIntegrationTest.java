@@ -27,7 +27,6 @@ import org.junit.Test;
 import edu.harvard.hul.ois.drs.pdfaconvert.ApplicationConstants;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConvert;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConverterOutput;
-import edu.harvard.hul.ois.drs.pdfaconvert.UnknownFileTypeException;
 
 /**
  * These are integration tests needing configuration in src/test/resources/project.properties of
@@ -35,7 +34,7 @@ import edu.harvard.hul.ois.drs.pdfaconvert.UnknownFileTypeException;
  * 
  * @author dan179
  */
-//@Ignore // ALWAYS uncomment before saving this class -- This is an integration test!
+@Ignore // ALWAYS uncomment before saving this class -- This is an integration test!
 public class PdfaConvertIntegrationTest {
 
 	/*
@@ -76,7 +75,7 @@ public class PdfaConvertIntegrationTest {
 		PdfaConverterOutput output = converter.examine(inputFile);
 		String basicFilename = inputFilename.substring(0, inputFilename.indexOf('.'));
 		String expectedFilename = basicFilename + ".pdf";
-		File outputFile = new File(PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP) + File.separator + expectedFilename);
+		File outputFile = new File(PdfaConvert.getApplicationProperties().getProperty(ApplicationConstants.OUTPUT_DIR_PROP) + File.separator + expectedFilename);
 		assertNotNull(outputFile);
 		assertTrue(outputFile.exists());
 		assertTrue(outputFile.isFile());
@@ -105,7 +104,7 @@ public class PdfaConvertIntegrationTest {
 		PdfaConverterOutput output = converter.examine(inputFile);
 		String basicFilename = inputFilename.substring(0, inputFilename.indexOf('.'));
 		String expectedFilename = basicFilename + ".pdf";
-		File outputFile = new File(PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP) + File.separator + expectedFilename);
+		File outputFile = new File(PdfaConvert.getApplicationProperties().getProperty(ApplicationConstants.OUTPUT_DIR_PROP) + File.separator + expectedFilename);
 		assertNotNull(outputFile);
 		assertTrue(outputFile.exists());
 		assertTrue(outputFile.isFile());
@@ -120,7 +119,7 @@ public class PdfaConvertIntegrationTest {
 	 * @throws IOException
 	 * @throws URISyntaxException
 	 */
-	@Test(expected=UnknownFileTypeException.class) // cannot run until there is an available pdfaPilot application available
+	@Test
 	public void testExaminePdf() throws IOException, URISyntaxException {
 		ClassLoader loader = Thread.currentThread().getContextClassLoader();
 		String inputFilename = "Has_document_properties.pdf";
@@ -133,7 +132,7 @@ public class PdfaConvertIntegrationTest {
 
 		converter.examine(inputFile);
 		String basicFilename = inputFilename.substring(0, inputFilename.indexOf('.'));
-		File outputFile = new File(PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP) + File.separator + basicFilename + ".pdf");
+		File outputFile = new File(PdfaConvert.getApplicationProperties().getProperty(ApplicationConstants.OUTPUT_DIR_PROP) + File.separator + basicFilename + ".pdf");
 		assertNotNull(outputFile);
 		assertTrue(outputFile.exists());
 		assertTrue(outputFile.isFile());

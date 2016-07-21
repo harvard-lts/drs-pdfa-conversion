@@ -18,17 +18,23 @@ import java.io.Serializable;
  * @author dan179
  */
 public class PdfaConverterOutput implements Serializable {
-	private static final long serialVersionUID = 6166711611392895982L;
-	
-	private File pdfaConvertedFile;
+	private static final long serialVersionUID = 8657370419144639361L;
 
-	public PdfaConverterOutput(File pdfaConvertedFile) {
+	private File pdfaConvertedFile;
+	private String toolLoggingOutput;
+
+	public PdfaConverterOutput(File pdfaConvertedFile, String toolLoggingOutput) {
 		super();
 		this.pdfaConvertedFile = pdfaConvertedFile;
+		this.toolLoggingOutput = toolLoggingOutput;
 	}
 
 	public File getPdfaConvertedFile() {
 		return pdfaConvertedFile;
+	}
+	
+	public String getToolLoggingOutput() {
+		return toolLoggingOutput;
 	}
 
 }
