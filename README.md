@@ -45,7 +45,7 @@ The application is used at a command prompt by executing the main JAR file. The 
 `java -DPDFA_CONVERTER_PROPS=/path/to/customized/project.properties -Dlog4j.configurationFile=/path/to/customized/log4j2.xml -jar pdfa-converter.jar -i /path/to/file/or/directory/`
 
 ### Input options:
--i -- Path to input file or directory containing multiple input files for conversion.
+-i -- Path to input file or directory containing multiple input files for conversion.<br>
 -o -- (optional) The sub-directory withing the 'output-dir' property into which the converted files will be placed. This directory will be created if necessary.
 -v -- Display the version of the application.
 -h -- Display simple help text for the application.
