@@ -25,7 +25,7 @@ This project is built with [Maven](https://maven.apache.org/). The final artifac
 There is a configuration file for the application contained within the pdfa-converter.jar file and also in the source tree at src/main/resources/project.properties.
 
 The project.properties file that is packaged with the application **WILL NOT** contain the correct setting.
-This file should be copied and placed external to the application then referenced with a system property as follows: 
+This file should be copied and placed external to the application then referenced with a system property as follows: <br>
 `-DPDFA_CONVERTER_PROPS=/path/to/customized/project.properties`
 
 There are 3 properties for the locations of unoconv, Calibre, and pdfaPilot, respectively. Make sure LibreOffice is also installed and available on the system's Path.
@@ -36,7 +36,7 @@ There are 3 properties for the locations of unoconv, Calibre, and pdfaPilot, res
 There are properties for referencing and using pdfaPilot remotely via SSH tunneling. Note: this assumes the local system has a public key set on the remote system to avoid manual login intervention when using the SSH command. The property 'pdfaPilotRemoteInputDir' and 'pdfaPilotRemoteOutputDir' represent the locations on the remote system where the application will SCP a file to be converted and and SCP to retrieve the converted file.
 
 ## Logging
-The application uses [Log4j 2](http://logging.apache.org/log4j/2.x/). Though there is a log4j2.xml configuration file it is highly recommended to configure your own file and point to it with a system property with
+The application uses [Log4j 2](http://logging.apache.org/log4j/2.x/). Though there is a log4j2.xml configuration file it is highly recommended to configure your own file and point to it with a system property with <br>
 `-Dlog4j.configurationFile=/path/to/customized/log4j2.xml`
 
 ## Usage
@@ -46,6 +46,6 @@ The application is used at a command prompt by executing the main JAR file. The 
 
 ### Input options:
 -i -- Path to input file or directory containing multiple input files for conversion.<br>
--o -- (optional) The sub-directory withing the 'output-dir' property into which the converted files will be placed. This directory will be created if necessary.
--v -- Display the version of the application.
+-o -- (optional) The sub-directory withing the 'output-dir' property into which the converted files will be placed. This directory will be created if necessary.<br>
+-v -- Display the version of the application.<br>
 -h -- Display simple help text for the application.
