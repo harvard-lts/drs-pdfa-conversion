@@ -36,6 +36,7 @@ import org.apache.logging.log4j.Logger;
 
 import edu.harvard.hul.ois.drs.pdfaconvert.tools.PdfaConvertable;
 import edu.harvard.hul.ois.drs.pdfaconvert.tools.calibre.CalibreTool;
+import edu.harvard.hul.ois.drs.pdfaconvert.tools.pdfapilot.PdfaPilotRemoteTool;
 import edu.harvard.hul.ois.drs.pdfaconvert.tools.pdfapilot.PdfaPilotTool;
 import edu.harvard.hul.ois.drs.pdfaconvert.tools.unoconv.UnoconvTool;
 
@@ -44,15 +45,18 @@ import edu.harvard.hul.ois.drs.pdfaconvert.tools.unoconv.UnoconvTool;
  */
 public class PdfaConvert {
 
-	public static Properties applicationProps; // consider creating with Spring and injecting where needed
+	private static Properties applicationProps; // consider creating with Spring and injecting where needed
 
 	private String unoconvHome;
 	private String pdfaPilotHome;
 	private String calibreHome;
+	private File outputDirFile; // output directory for converted files
+	private boolean isRemotePdfaPilot;
 
 	private static String applicationVersion;
 
 	// command line parameters
+	private static final String PARAM_O = "o";
 	private static final String PARAM_I = "i";
 	private static final String PARAM_H = "h";
 	private static final String PARAM_V = "v";
@@ -81,6 +85,8 @@ public class PdfaConvert {
 		System.out.println("Finished initializing Log4j");
 		VALID_FILE_TYPES = Arrays.asList(DOC_TYPE, DOCM_TYPE, DOCX_TYPE, EPUB_TYPE, ODT_TYPE, PDF_TYPE, RTF_TYPE,
 				WP_TYPE, WPD_TYPE);
+		loadVersionFile();
+		loadApplicationPropertiesFile();
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -96,8 +102,9 @@ public class PdfaConvert {
 		Options options = new Options();
 		Option inputFileOption = new Option(PARAM_I, true, "input file");
 		options.addOption(inputFileOption);
-		options.addOption("v", false, "print version information");
-		options.addOption("h", false, "help information");
+		options.addOption(PARAM_V, false, "print version information");
+		options.addOption(PARAM_H, false, "help information");
+		options.addOption(PARAM_O, true, "output sub-directory");
 
 		CommandLineParser parser = new DefaultParser();
 		CommandLine cmd = null;
@@ -110,7 +117,6 @@ public class PdfaConvert {
 
 		// print version info
 		if (cmd.hasOption(PARAM_V)) {
-			setVersionFromFile();
 			if (StringUtils.isEmpty(applicationVersion)) {
 				applicationVersion = "<not set>";
 				System.exit(1);
@@ -129,28 +135,33 @@ public class PdfaConvert {
 		if (cmd.hasOption(PARAM_I)) {
 			String input = cmd.getOptionValue(PARAM_I);
 			boolean hasValue = cmd.hasOption(PARAM_I);
-			logger.debug("Has option " + PARAM_I + " value: [" + hasValue + "]****");
+			logger.debug("Has option {} value: [{}]", PARAM_I, hasValue);
 			String paramVal = cmd.getOptionValue(PARAM_I);
-			logger.debug("value of option: [" + paramVal + "] ****");
+			logger.debug("value of option: [{}] ****", paramVal);
 
 			File inputFile = new File(input);
 			if (!inputFile.exists()) {
-				logger.warn(input + " does not exist or is not readable.");
+				logger.warn("{} does not exist or is not readable.", input);
 				System.exit(1);
 			}
-
-			PdfaConvert convert = new PdfaConvert();
+			
+			String subDir = cmd.getOptionValue(PARAM_O);
+			PdfaConvert convert;
+			if ( !StringUtils.isEmpty(subDir)) {
+				convert = new PdfaConvert(subDir);
+			} else {
+				convert = new PdfaConvert();
+			}
 			if (inputFile.isDirectory()) {
 				if (inputFile.listFiles() == null || inputFile.listFiles().length < 1) {
 					logger.warn("Input directory is empty, nothing to process.");
 					System.exit(1);
 				} else {
-					logger.debug("Have directory: [" + inputFile.getAbsolutePath() + "] with file count: "
-							+ inputFile.listFiles().length);
+					logger.debug("Have directory: [{}] with file count: {}", inputFile.getAbsolutePath(), inputFile.listFiles().length);
 					DirectoryStream<Path> dirStream = null;
 						dirStream = Files.newDirectoryStream(inputFile.toPath());
 						for (Path filePath : dirStream) {
-							logger.debug("Have file name: " + filePath.toString());
+							logger.debug("Have file name: {}", filePath.toString());
 							// Note: only handling files, not recursively going into sub-directories
 							if (filePath.toFile().isFile()) {
 								// Catch possible exception for each file so can handle other files in directory.
@@ -160,13 +171,13 @@ public class PdfaConvert {
 									logger.error("Problem processing file: {} -- Error message: {}", filePath.getFileName(), e.getMessage());
 								}
 							} else {
-								logger.warn("Not a file so not processing: " + filePath.toString()); // could be a directory but not recursing
+								logger.warn("Not a file so not processing: {}", filePath.toString()); // could be a directory but not recursing
 							}
 						}
 						dirStream.close();
 				}
 			} else {
-				logger.debug("About to process file: " + inputFile.getPath());
+				logger.debug("About to process file: {}", inputFile.getPath());
 				try {
 					convert.examine(inputFile);
 				} catch (Exception e) {
@@ -186,44 +197,31 @@ public class PdfaConvert {
 	private static void displayHelp() {
 		System.out.println("PDF/A Utility help");
 		System.out.println("-i follow by path to input file to process");
+		System.out.println("-o output sub-directory");
 		System.out.println("-v for version of this application");
 		System.out.println("-h to display this help");
 	}
 
-	  /*
-	   * Called from either main() for stand-alone application usage or constructor
-	   * when used by another program, this reads the properties file containing the
-	   * current version of FITS.
-	   *
-	   * Precondition of this method is that the static FITS_HOME has been set via
-	   * an environment variable, being passed into a constructor, or is just the current directory.
-	   */
-	  private static void setVersionFromFile() {
+	private static void loadVersionFile() {
 
-			// get version properties file
-			ClassLoader loader = Thread.currentThread().getContextClassLoader();
-			try {
-				InputStream resourceStream = loader.getResourceAsStream(ApplicationConstants.VERSION_PROPS);
-				Properties versionProps = new Properties();
-				versionProps.load(resourceStream);
-				String version = versionProps.getProperty(ApplicationConstants.VERSION_KEY);
-				if (StringUtils.isEmpty(version)) {
-					version = "<not available>";
-				}
-				applicationVersion = version;
-				logger.debug("{} version: {}", PdfaConvert.class.getSimpleName(), applicationVersion);
-			} catch (IOException e) {
-				logger.error("Could not load properties file: " + ApplicationConstants.PROJECT_PROPS, e);
+		// get version properties file
+		ClassLoader loader = Thread.currentThread().getContextClassLoader();
+		try {
+			InputStream resourceStream = loader.getResourceAsStream(ApplicationConstants.VERSION_PROPS);
+			Properties versionProps = new Properties();
+			versionProps.load(resourceStream);
+			String version = versionProps.getProperty(ApplicationConstants.VERSION_KEY);
+			if (StringUtils.isEmpty(version)) {
+				version = "<not available>";
 			}
-	  }
-
-	  /**
-	   * 
-	   * @throws IOException - If there is a problem reading in the application's properties file.
-	   */
-	public PdfaConvert() throws IOException {
-		super();
-
+			applicationVersion = version;
+			logger.debug("{} version: {}", PdfaConvert.class.getSimpleName(), applicationVersion);
+		} catch (IOException e) {
+			logger.error("Could not load properties file: {}", ApplicationConstants.PROJECT_PROPS, e);
+		}
+	}
+	
+	private static void loadApplicationPropertiesFile() {
 		// Set the projects properties.
 		// First look for a system property pointing to a project properties file.
 		// This value can be either a file path, file protocol (e.g. - file:/path/to/file),
@@ -250,15 +248,12 @@ public class PdfaConvert {
 				}
 			} catch (URISyntaxException e) {
 				// fall back to default file
-				logger.error("Unable to load properties file: " + environmentProjectPropsFile
-						+ " -- reason: " + e.getReason());
-				logger.error(
-						"Falling back to default project.properties file: " + ApplicationConstants.PROJECT_PROPS);
+				logger.error("Unable to load properties file: {} -- reason: {}", environmentProjectPropsFile, e.getReason());
+				logger.error("Falling back to default project.properties file: {}", ApplicationConstants.PROJECT_PROPS);
 			}
 		}
-
+		
 		applicationProps = new Properties();
-
 		// load properties if environment value set
 		if (projectPropsUri != null) {
 			File envPropFile = new File(projectPropsUri);
@@ -266,7 +261,7 @@ public class PdfaConvert {
 				Reader reader;
 				try {
 					reader = new FileReader(envPropFile);
-					logger.info("About to load project.properties from environment: " + envPropFile.getAbsolutePath());
+					logger.info("About to load project.properties from environment: {}", envPropFile.getAbsolutePath());
 					applicationProps.load(reader);
 					logger.info("Success -- loaded properties file.");
 				} catch (IOException e) {
@@ -284,11 +279,27 @@ public class PdfaConvert {
 				applicationProps.load(resourceStream);
 				logger.info("loaded default applicationProps: ");
 			} catch (IOException e) {
-				logger.error("Could not load properties file: " + ApplicationConstants.PROJECT_PROPS, e);
+				logger.error("Could not load properties file: {}", ApplicationConstants.PROJECT_PROPS, e);
 				// couldn't load default properties so bail...
-				throw e;
+				throw new RuntimeException("Couldn't load an applications properties file.", e);
 			}
 		}
+	}
+
+	/**
+	 * No-arg constructor; Put converted files into configured sub-directory.
+	 */
+	public PdfaConvert() {
+		this(null);
+	}
+	
+	/**
+	 * 1-arg constructor; Put converted files into sub-directory of configured output directory.
+	 * 
+	 * @param subDir - Sub-directory of configured output directory to place converted files if not <code>null</code>.
+	 */
+	public PdfaConvert(String subDir) {
+		super();
 		
 		logger.info("Have the following application properties:");
 		Enumeration<Object> keys = applicationProps.keys();
@@ -301,10 +312,30 @@ public class PdfaConvert {
 		unoconvHome = applicationProps.getProperty(ApplicationConstants.UNOCONV_HOME_PROP);
 		pdfaPilotHome = applicationProps.getProperty(ApplicationConstants.PDFA_PILOT_HOME_PROP);
 		calibreHome = applicationProps.getProperty(ApplicationConstants.CALIBRE_HOME_PROP);
+		isRemotePdfaPilot = Boolean.valueOf(applicationProps.getProperty(ApplicationConstants.PDFA_PILOT_IS_REMOTE_PROP));
+		String outputDir = PdfaConvert.applicationProps.getProperty(ApplicationConstants.OUTPUT_DIR_PROP);
 		logger.debug("Converter homes:\n unconvHome: {}, pdfaPilotHome: {}, calibreHome: {}", unoconvHome,
 				pdfaPilotHome, calibreHome);
-
-		setVersionFromFile();
+		File baseOutputDirFile = new File(outputDir);
+		boolean outputDirExists = baseOutputDirFile.exists();
+		logger.debug("Output directory for PDF files and external application log files: {}  -- exists: {}", outputDir, outputDirExists);
+		// ensure output directory exists
+		if (!outputDirExists) {
+			baseOutputDirFile.mkdir();
+			logger.debug("Created output directory: {}", baseOutputDirFile.getAbsolutePath());
+		}
+		
+		// optionally create output sub-directory
+		if (subDir != null) {
+			logger.debug("About to create sub-directory: {} within output directory: {}", subDir, baseOutputDirFile.getName());
+			File subDirFile = new File(baseOutputDirFile, subDir);
+			subDirFile.mkdir();
+			logger.debug("Succeeded making sub-directory: {}", subDirFile.getName());
+			outputDirFile = subDirFile;
+		} else {
+			outputDirFile = baseOutputDirFile;
+		}
+		logger.debug("Output directory: {}", outputDirFile.getAbsoluteFile());
 	}
 
 	/**
@@ -336,13 +367,13 @@ public class PdfaConvert {
 			case RTF_TYPE:
 			case WP_TYPE:
 			case WPD_TYPE:
-				converter = new UnoconvTool(unoconvHome);
+				converter = new UnoconvTool(unoconvHome, outputDirFile);
 				break;
 			case EPUB_TYPE:
-				converter = new CalibreTool(calibreHome);
+				converter = new CalibreTool(calibreHome, outputDirFile);
 				break;
 			case PDF_TYPE:
-				converter = new PdfaPilotTool(pdfaPilotHome);
+				converter = isRemotePdfaPilot ? new PdfaPilotRemoteTool(pdfaPilotHome, outputDirFile) : new PdfaPilotTool(pdfaPilotHome, outputDirFile);
 				break;
 			default:
 				throw new UnknownFileTypeException("File type unknown. Cannot process: " + inputFile.getName());
@@ -353,5 +384,9 @@ public class PdfaConvert {
 	
 	public String getVersion() {
 		return applicationVersion;
+	}
+	
+	public static Properties getApplicationProperties() {
+		return applicationProps;
 	}
 }

@@ -29,12 +29,29 @@ public class ApplicationConstants {
 	/** Key into the project properties of the path to the Unoconv application home. */
 	public static final String UNOCONV_HOME_PROP = "unoconv_home";
 
-	/** PKey into the project properties of the path to the PdfaPilot application home. */
-	public static final String PDFA_PILOT_HOME_PROP = "pdfaPilot_home";
-
 	/** Key into the project properties of the path to the Calibre application home. */
 	public static final String CALIBRE_HOME_PROP = "calibre_home";
 
 	/** Key into the project properties of the output directory for converted files. */
 	public static final String OUTPUT_DIR_PROP = "output_dir";
+	
+	/** Key into the project properties of the path to the PdfaPilot application home. */
+	public static final String PDFA_PILOT_HOME_PROP = "pdfaPilot_home";
+	
+	/** Key into the project properties whether the pdfaPilot executable is remote. */
+	public static final String PDFA_PILOT_IS_REMOTE_PROP = "isPdfaPilotRemote";
+	
+	public static final String PDFA_PILOT_REMOTE_URL_PROP = "pdfaPilotRemoteUrl";
+	
+	/** Key into the project properties of the name of user to use on remote pdfaPilot computer. */
+	public static final String PDFA_PILOT_REMOTE_USER_PROP = "pdfaPilotRemoteUser";
+	
+	/** Key into the project properties of the tunneling string to remote computer. */
+	public static final String PDFA_PILOT_REMOTE_TUNNELLING_STRING_PROP = "pdfaPilotRemoteTuneling";
+	
+	/** Key into the project properties of the remote directory for placement of source file to convert. */
+	public static final String PDFA_PILOT_REMOTE_INPUT_DIR_PROP = "pdfaPilotRemoteInputDir";
+	
+	/** Key into the project properties of the remote directory for destination of converted file. */
+	public static final String PDFA_PILOT_REMOTE_OUTPUT_DIR_PROP = "pdfaPilotRemoteOutputDir";
 }

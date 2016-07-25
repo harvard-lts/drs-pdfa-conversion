@@ -15,6 +15,11 @@ import edu.harvard.hul.ois.drs.pdfaconvert.GeneratedFileUnavailableException;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConverterOutput;
 import edu.harvard.hul.ois.drs.pdfaconvert.UnknownFileTypeException;
 
+/**
+ * Interface for tools that convert an input file to a PDF/A document.
+ * 
+ * @author dan179
+ */
 public interface PdfaConvertable {
 
 	/**
