@@ -4,7 +4,7 @@
 
 	<groupId>edu.harvard.hul.ois.drs.pdfa</groupId>
 	<artifactId>pdfa-converter</artifactId>
-	<version>0.6.0T</version>
+	<version>0.6.0</version>
 	<packaging>jar</packaging>
 
 	<name>PDF/A Converter</name>
