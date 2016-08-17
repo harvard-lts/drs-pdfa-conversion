@@ -78,30 +78,43 @@ public class PdfaPilotTool extends AbstractPdfaConverterTool {
 		useRemoteInputDirSetting = true;
 	}
 
+	/**
+	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.AbstractPdfaConverterTool#getToolName()
+	 */
 	@Override
 	protected String getToolName() {
 		return TOOL_NAME;
 	}
-	
+
 	/**
-	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.unoconv.PdfaConvertable#extractInfo(java.io.File)
+	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.PdfaConvertable#convert(java.io.File)
 	 */
+	@Override
 	public PdfaConverterOutput convert(File inputFile) {
-        logger.debug(TOOL_NAME + ".extractInfo() starting on file: [{}]", inputFile.getName());
+		return convert(inputFile, false);
+	}
+
+	/**
+	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.PdfaConvertable#convert(java.io.File, boolean)
+	 */
+	@Override
+	public PdfaConverterOutput convert(File inputFile, boolean deleteConvertedFile) {
+        logger.debug("{}.convert() starting on file: [{}]", TOOL_NAME, inputFile);
         logger.debug("file exists: {}", inputFile.exists());
         logger.debug("file absolute path: {}", inputFile.getAbsolutePath());
 
         // Process input file with pdfaPilot
-		List<String> execCommand = new ArrayList<String>();
+        String generatedPdfFilename = getGeneratedPdfFilename(inputFile);
+        List<String> execCommand = new ArrayList<String>();
 		execCommand.addAll(fullPdfaPilotCommand);
 		if (useRemoteInputDirSetting) {
 			// set set output file
-			execCommand.add("--outputfile=" + PdfaConvert.getApplicationProperties().getProperty(ApplicationConstants.PDFA_PILOT_REMOTE_OUTPUT_DIR_PROP) + File.separatorChar + inputFile.getName());
+			execCommand.add("--outputfile=" + PdfaConvert.getApplicationProperties().getProperty(ApplicationConstants.PDFA_PILOT_REMOTE_OUTPUT_DIR_PROP) + File.separatorChar + generatedPdfFilename);
 			// set input file
 			execCommand.add(PdfaConvert.getApplicationProperties().getProperty(ApplicationConstants.PDFA_PILOT_REMOTE_INPUT_DIR_PROP) + File.separatorChar + inputFile.getName());
 		} else {
 			// set output file
-			execCommand.add("--outputfile=" + getOutputDirectory() + File.separatorChar + inputFile.getName());
+			execCommand.add("--outputfile=" + getOutputDirectory() + File.separatorChar + generatedPdfFilename);
 			// set input file
 			execCommand.add(inputFile.getAbsolutePath());
 		}
@@ -111,7 +124,7 @@ public class PdfaPilotTool extends AbstractPdfaConverterTool {
 
 		String logFilename = getOutputDirectory() + File.separator + TOOL_LOG_FILE_NAME;
 		logApplicationOutput(logFilename, baos);
-		PdfaConverterOutput converterOutput = retrieveGeneratedOutput(inputFile.getName(), baos);
+		PdfaConverterOutput converterOutput = retrieveGeneratedOutput(generatedPdfFilename, baos, deleteConvertedFile);
 		logger.debug("Finished running {}", TOOL_NAME);
 		return converterOutput;
 	}
@@ -121,12 +134,13 @@ public class PdfaPilotTool extends AbstractPdfaConverterTool {
 	 * 
 	 * @param filename Name of file to retrieve.
 	 * @param baos Output from pdfaPilot executable.
+	 * @param deleteConvertedFile Delete the converted file.
 	 * @return PdfaConverterOutput which wraps both the converted file and text output of pdfaPilot.
 	 */
-	protected PdfaConverterOutput retrieveGeneratedOutput(String filename, ByteArrayOutputStream baos) {
-		File pdfaOutputFile = retrieveGeneratedFile( getOutputDirectory(), filename);
+	protected PdfaConverterOutput retrieveGeneratedOutput(String filename, ByteArrayOutputStream baos, boolean deleteConvertedFile) {
+		File pdfaOutputFile = retrieveGeneratedFile( filename, deleteConvertedFile);
 		String toolOutput = getToolLoggingOutput(baos);
-		PdfaConverterOutput converterOutput = new PdfaConverterOutput(pdfaOutputFile, toolOutput);		
+		PdfaConverterOutput converterOutput = new PdfaConverterOutput(pdfaOutputFile, toolOutput);
 		return converterOutput;
 	}
 }

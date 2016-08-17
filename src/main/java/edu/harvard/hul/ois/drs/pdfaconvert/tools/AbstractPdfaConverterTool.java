@@ -111,6 +111,9 @@ public abstract class AbstractPdfaConverterTool implements PdfaConvertable {
 		}
 	}
 	
+	/*
+	 * Retrieve the tool's output for the currently converted document.
+	 */
 	protected String getToolLoggingOutput(ByteArrayOutputStream baos) {
 		StringWriter sw = new StringWriter();
 		sw.append(baos.toString());
@@ -118,17 +121,28 @@ public abstract class AbstractPdfaConverterTool implements PdfaConvertable {
 	}
 
 	/**
+	 * Returns the converted file for the given input.
 	 * 
-	 * @param outputDirectory
-	 * @param outputFilename
+	 * @param outputFilename - The file name to set on the converted file.
+	 * @param deleteConvertedFile - Delete the converted file from file system on JVM termination.
 	 * @throws GeneratedFileUnavailableException If the file is not available to be returned.
 	 */
-	protected File retrieveGeneratedFile(String outputDirectory, String outputFilename) {
-		String filePath = outputDirectory + File.separator + outputFilename;
+	protected File retrieveGeneratedFile(String outputFilename, boolean deleteConvertedFile) {
+		String filePath = getOutputDirectory() + File.separator + outputFilename;
 		File generatedFile = new File(filePath);
 		if ( !generatedFile.isFile() || !generatedFile.canRead()) {
 			throw new GeneratedFileUnavailableException("The generated file [" + generatedFile + "] is not available to be returned.");
 		}
+		if (deleteConvertedFile) {
+			generatedFile.deleteOnExit();
+		}
 		return generatedFile;
+	}
+
+	protected String getGeneratedPdfFilename(File inputFile) {
+		String outputFilenameBase = inputFile.getName().substring(0, inputFile.getName().indexOf('.'));
+		String generatedPdfFilename = outputFilenameBase + ".pdf";
+        logger.debug("outputFilename: {}", generatedPdfFilename);
+		return generatedPdfFilename;
 	}
 }
