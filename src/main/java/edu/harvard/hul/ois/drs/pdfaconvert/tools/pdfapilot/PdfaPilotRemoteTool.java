@@ -54,23 +54,45 @@ public class PdfaPilotRemoteTool extends PdfaPilotTool {
 	/**
 	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.pdfapilot.PdfaPilotTool#convert(java.io.File)
 	 */
+	@Override
 	public PdfaConverterOutput convert(File inputFile) {
+		return convert(inputFile, false);
+	}
+
+	/**
+	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.pdfapilot.PdfaPilotTool#convert(java.io.File, boolean)
+	 */
+	@Override
+	public PdfaConverterOutput convert(File inputFile, boolean deleteConvertedFile) {
 		this.inputFile = inputFile;
 		
 		copyFileToRemote();
-		PdfaConverterOutput output = super.convert(inputFile);
-		removeRemoteInputFile();
-		removeRemoteDerivativeFile();
+		PdfaConverterOutput output = null;
+		try {
+			output = super.convert(inputFile, deleteConvertedFile);
+		} finally {
+			// attempt to clean up on remote server even if a problem
+			removeRemoteInputFile();
+			removeRemoteDerivativeFile();
+		}
 		logger.debug("Finished running {}", TOOL_NAME);
 		return output;
 	}
 	
 	/**
-	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.pdfapilot.PdfaPilotTool#retrieveGeneratedOutput(java.lang.String, java.io.ByteArrayOutputStream)
+	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.pdfapilot.PdfaPilotTool#retrieveGeneratedOutput(java.lang.String, java.io.ByteArrayOutputStream, boolean)
 	 */
-	protected PdfaConverterOutput retrieveGeneratedOutput(String filename, ByteArrayOutputStream baos) {
-		copyFileFromRemote(); // Must copy file from remote server before able to return it.
-		return super.retrieveGeneratedOutput(filename, baos);
+	protected PdfaConverterOutput retrieveGeneratedOutput(String filename, ByteArrayOutputStream baos, boolean deleteConvertedFile) {
+		copyDerivativeFileFromRemote(); // Must copy file from remote server before able to return it.
+		return super.retrieveGeneratedOutput(filename, baos, deleteConvertedFile);
+	}
+
+	/**
+	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.pdfapilot.PdfaPilotTool#getToolName()
+	 */
+	@Override
+	protected String getToolName() {
+		return TOOL_NAME;
 	}
 
 	/*
@@ -92,7 +114,8 @@ public class PdfaPilotRemoteTool extends PdfaPilotTool {
 	/*
 	 * Copied converted file from remote server to locally configured output directory.
 	 */
-	private void copyFileFromRemote() {
+	private void copyDerivativeFileFromRemote() {
+        String generatedPdfFilename = getGeneratedPdfFilename(inputFile);
         List<String> scpExecCommand = new ArrayList<String>();
 		scpExecCommand.clear();
 		scpExecCommand.add("scp");
@@ -102,7 +125,7 @@ public class PdfaPilotRemoteTool extends PdfaPilotTool {
         		":~/" +
         		PdfaConvert.getApplicationProperties().getProperty(ApplicationConstants.PDFA_PILOT_REMOTE_OUTPUT_DIR_PROP) +
         		File.separatorChar +
-        		inputFile.getName());
+        		generatedPdfFilename);
         scpExecCommand.add( getOutputDirectory() );
 		logger.debug("About to launch {}, command: {}", getToolName(), scpExecCommand);
 		processCommand(scpExecCommand, null);
@@ -124,10 +147,11 @@ public class PdfaPilotRemoteTool extends PdfaPilotTool {
 	 * Removes converted file from remote server after it is retrieved and no longer needed remotely.
 	 */
 	private void removeRemoteDerivativeFile() {
+        String generatedPdfFilename = getGeneratedPdfFilename(inputFile);
 		List<String> scpRmOutputFile = new ArrayList<String>();
 		scpRmOutputFile.addAll(tunnelingPrefixCommand);
 		scpRmOutputFile.add("rm " +
-				PdfaConvert.getApplicationProperties().getProperty(ApplicationConstants.PDFA_PILOT_REMOTE_OUTPUT_DIR_PROP) + File.separatorChar + inputFile.getName());
+				PdfaConvert.getApplicationProperties().getProperty(ApplicationConstants.PDFA_PILOT_REMOTE_OUTPUT_DIR_PROP) + File.separatorChar + generatedPdfFilename);
 		logger.debug("About to launch {}, command: {}", getToolName(), scpRmOutputFile);
 		processCommand(scpRmOutputFile, null);
 	}

@@ -50,29 +50,35 @@ public class CalibreTool extends AbstractPdfaConverterTool {
 	protected String getToolName() {
 		return TOOL_NAME;
 	}
-	
+
 	/**
-	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.unoconv.PdfaConvertable#extractInfo(java.io.File)
+	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.PdfaConvertable#convert(java.io.File)
 	 */
+	@Override
 	public PdfaConverterOutput convert(File inputFile) {
-        logger.debug("{}.extractInfo() starting on file: [{}]", TOOL_NAME, inputFile);
+		return convert(inputFile, false);
+	}
+
+	/**
+	 * @see edu.harvard.hul.ois.drs.pdfaconvert.tools.PdfaConvertable#convert(java.io.File, boolean)
+	 */
+	@Override
+	public PdfaConverterOutput convert(File inputFile, boolean deleteConvertedFile) {
+        logger.debug("{}.convert() starting on file: [{}]", TOOL_NAME, inputFile);
         logger.debug("file exists: {}", inputFile.exists());
         logger.debug("file absolute path: {}", inputFile.getAbsolutePath());
 
+        String generatedPdfFilename = getGeneratedPdfFilename(inputFile);
         List<String> execCommand = new ArrayList<String>();
 		execCommand.addAll(unixCommand);
 		execCommand.add(inputFile.getAbsolutePath()); // input file first
-
-		String outputFilenameBase = inputFile.getName().substring(0, inputFile.getName().indexOf('.'));
-		String generatedPdfFilename = outputFilenameBase + ".pdf";
 		execCommand.add( getOutputDirectory() + File.separator + generatedPdfFilename);
-		
 		logger.debug("Launching {}, with command: {}",  TOOL_NAME, execCommand);
 		ByteArrayOutputStream baos = processCommand(execCommand, null);
 		String logFilename = getOutputDirectory() + File.separator + TOOL_LOG_FILE_NAME;
 		logApplicationOutput(logFilename, baos);
 
-		File pdfaOutputFile = retrieveGeneratedFile( getOutputDirectory(), generatedPdfFilename);
+		File pdfaOutputFile = retrieveGeneratedFile(generatedPdfFilename, deleteConvertedFile);
 		String toolOutput = getToolLoggingOutput(baos);
 		PdfaConverterOutput converterOutput = new PdfaConverterOutput(pdfaOutputFile, toolOutput);		
 		logger.debug("Finished running {}", TOOL_NAME);

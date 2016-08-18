@@ -48,7 +48,7 @@ public class AbstractPdfaConverterToolTest {
 			fail("Could not create file: " + e.getMessage());
 		}
 		AbstractPdfaConverterTool tool = createAbstractPdfaConverterTool();
-		File retrievedFile = tool.retrieveGeneratedFile(tempDir, filename);
+		File retrievedFile = tool.retrieveGeneratedFile(filename, false);
 		assertNotNull(retrievedFile);
 		assertTrue(retrievedFile.exists());
 		assertTrue(retrievedFile.isFile());
@@ -73,7 +73,7 @@ public class AbstractPdfaConverterToolTest {
 		}
 		AbstractPdfaConverterTool tool = createAbstractPdfaConverterTool();
 		// attempt to retrieve file from a different location
-		File retrievedFile = tool.retrieveGeneratedFile("temp2", filename);
+		File retrievedFile = tool.retrieveGeneratedFile("wrong-filename.txt", false);
 		assertNotNull(retrievedFile);
 		assertTrue(retrievedFile.exists());
 		assertTrue(retrievedFile.isFile());
@@ -81,7 +81,8 @@ public class AbstractPdfaConverterToolTest {
 	}
 	
 	private AbstractPdfaConverterTool createAbstractPdfaConverterTool() {
-		return new AbstractPdfaConverterTool(null) {
+		File outputDirFile = new File(tempDir);
+		return new AbstractPdfaConverterTool(outputDirFile) {
 
 			@Override
 			protected String getToolName() {

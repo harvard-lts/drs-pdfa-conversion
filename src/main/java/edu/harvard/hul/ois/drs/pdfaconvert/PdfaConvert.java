@@ -229,7 +229,7 @@ public class PdfaConvert {
 		// If this value either does not exist or is not valid, the default
 		// file that comes with this application will be used for initialization.
 		String environmentProjectPropsFile = System.getProperty(ApplicationConstants.ENV_PROJECT_PROPS);
-		logger.info("Have project.properties from environment: {}", environmentProjectPropsFile);
+		logger.info("Have {} from environment: {}", ApplicationConstants.PROJECT_PROPS, environmentProjectPropsFile);
 		URI projectPropsUri = null;
 		if (environmentProjectPropsFile != null) {
 			try {
@@ -249,7 +249,7 @@ public class PdfaConvert {
 			} catch (URISyntaxException e) {
 				// fall back to default file
 				logger.error("Unable to load properties file: {} -- reason: {}", environmentProjectPropsFile, e.getReason());
-				logger.error("Falling back to default project.properties file: {}", ApplicationConstants.PROJECT_PROPS);
+				logger.error("Falling back to default {} file: {}", ApplicationConstants.PROJECT_PROPS, ApplicationConstants.PROJECT_PROPS);
 			}
 		}
 		
@@ -261,7 +261,7 @@ public class PdfaConvert {
 				Reader reader;
 				try {
 					reader = new FileReader(envPropFile);
-					logger.info("About to load project.properties from environment: {}", envPropFile.getAbsolutePath());
+					logger.info("About to load {} from environment: {}", ApplicationConstants.PROJECT_PROPS, envPropFile.getAbsolutePath());
 					applicationProps.load(reader);
 					logger.info("Success -- loaded properties file.");
 				} catch (IOException e) {
@@ -339,9 +339,10 @@ public class PdfaConvert {
 	}
 
 	/**
-	 * Converts the input file to PDF format using the appropriate application.
+	 * Converts the input file to PDF format using the appropriate application. Leaves the converted file
+	 * in the configured output directory.
 	 * 
-	 * @param inputFile - the input file to convert
+	 * @param inputFile - The input file to convert
 	 * @return PdfaConverterOutput - Contains the input converted to PDF/A and other relevant data.
 	 * @throws GeneratedFileUnavailableException - If the generated file is either unavailable or unreadable.
 	 * @throws UnknownFileTypeException - The input file extension cannot be processed into a PDF/A.
@@ -349,6 +350,22 @@ public class PdfaConvert {
 	 * @throws ExternalToolException - When there is a problem with the external tool being executed.
 	 */
 	public PdfaConverterOutput examine(File inputFile) {
+		return examine(inputFile, false);
+	}
+
+	/**
+	 * Converts the input file to PDF format using the appropriate application.
+	 * 
+	 * @param inputFile - The input file to convert
+	 * @param deleteConvertedFile - <code>true</code> delete the converted file upon completion;
+	 * 		  <code>false</code> leave converted file in configured output directory.
+	 * @return PdfaConverterOutput - Contains the input converted to PDF/A and other relevant data.
+	 * @throws GeneratedFileUnavailableException - If the generated file is either unavailable or unreadable.
+	 * @throws UnknownFileTypeException - The input file extension cannot be processed into a PDF/A.
+	 * @throws IllegalArgumentException - If the input is null.
+	 * @throws ExternalToolException - When there is a problem with the external tool being executed.
+	 */
+	public PdfaConverterOutput examine(File inputFile, boolean deleteConvertedFile) {
 		if (inputFile == null) {
 			logger.warn("Invalid null file -- no-op");
 			throw new IllegalArgumentException("inputFile parameter is null.");
@@ -378,8 +395,30 @@ public class PdfaConvert {
 			default:
 				throw new UnknownFileTypeException("File type unknown. Cannot process: " + inputFile.getName());
 		}
-		PdfaConverterOutput output = converter.convert(inputFile);
+		PdfaConverterOutput output = converter.convert(inputFile, deleteConvertedFile);
 		return output;
+	}
+	
+	/**
+	 * Deletes a derivative PDF file from the configured output directory.
+	 * 
+	 * @param filename - File name of the file to delete.
+	 * @return <code>true</code> if the file was found and deleted; <code>false</code> otherwise.
+	 */
+	public boolean deleteConvertedFile(String filename) {
+		boolean fileDeleted;
+		logger.debug("About to delete file: {} in directory: {}", filename, outputDirFile);
+		if (filename == null) {
+			logger.warn("filename to delete is null");
+			return false;
+		}
+		File toDeleteFile = new File(outputDirFile, filename);
+		if (!toDeleteFile.exists()) {
+			logger.warn("file does not exist: {}", toDeleteFile.getName());
+			return false;
+		}
+		fileDeleted = toDeleteFile.delete();
+		return fileDeleted;
 	}
 	
 	public String getVersion() {

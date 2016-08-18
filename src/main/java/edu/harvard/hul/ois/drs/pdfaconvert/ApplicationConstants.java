@@ -21,7 +21,7 @@ public class ApplicationConstants {
 	public static final String VERSION_KEY = "build.version";
 
 	/** Name of default properties file for this application. */
-	public static final String PROJECT_PROPS = "project.properties";
+	public static final String PROJECT_PROPS = "pdfa-converter.properties";
 
 	/** Key into the project properties of environment variable to point to external project properties file. */
 	public static final String ENV_PROJECT_PROPS = "PDFA_CONVERTER_PROPS";

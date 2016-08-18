@@ -29,7 +29,7 @@ import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConvert;
 import edu.harvard.hul.ois.drs.pdfaconvert.PdfaConverterOutput;
 
 /**
- * These are integration tests needing configuration in src/test/resources/project.properties of
+ * NOTE: These are integration tests needing configuration in src/test/resources/pdfa-converter.properties of
  * external applications so should only have @Ignore commented-out for local development testing.
  * 
  * @author dan179
