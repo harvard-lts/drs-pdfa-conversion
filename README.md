@@ -22,11 +22,11 @@ For converting .pdf files (non-PDF/A) it is necessary to have the commercial pro
 This project is built with [Maven](https://maven.apache.org/). The final artifact is a ZIP file. This should be unpacked at which point can be configured and executed.
 
 ## Configuration
-There is a configuration file for the application contained within the pdfa-converter.jar file and also in the source tree at src/main/resources/project.properties.
+There is a configuration file for the application contained within the pdfa-converter.jar file and also in the source tree at src/main/resources/pdfa-converter.properties.
 
-The project.properties file that is packaged with the application **WILL NOT** contain the correct setting.
+The pdfa-converter.properties file that is packaged with the application **WILL NOT** contain the correct setting.
 This file should be copied and placed external to the application then referenced with a system property as follows: <br>
-`-DPDFA_CONVERTER_PROPS=/path/to/customized/project.properties`
+`-DPDFA_CONVERTER_PROPS=/path/to/customized/pdfa-converter.properties`
 
 There are 3 properties for the locations of unoconv, Calibre, and pdfaPilot, respectively. Make sure LibreOffice is also installed and available on the system's Path.
 
@@ -42,7 +42,7 @@ The application uses [Log4j 2](http://logging.apache.org/log4j/2.x/). Though the
 ## Usage
 The application is used at a command prompt by executing the main JAR file. The following example uses external application configuration and log4j files.
 
-`java -DPDFA_CONVERTER_PROPS=/path/to/customized/project.properties -Dlog4j.configurationFile=/path/to/customized/log4j2.xml -jar pdfa-converter.jar -i /path/to/file/or/directory/`
+`java -DPDFA_CONVERTER_PROPS=/path/to/customized/pdfa-converter.properties -Dlog4j.configurationFile=/path/to/customized/log4j2.xml -jar pdfa-converter.jar -i /path/to/file/or/directory/`
 
 ### Input options:
 -i -- Path to input file or directory containing multiple input files for conversion.<br>
