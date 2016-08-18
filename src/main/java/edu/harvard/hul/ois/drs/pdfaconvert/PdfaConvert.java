@@ -229,7 +229,7 @@ public class PdfaConvert {
 		// If this value either does not exist or is not valid, the default
 		// file that comes with this application will be used for initialization.
 		String environmentProjectPropsFile = System.getProperty(ApplicationConstants.ENV_PROJECT_PROPS);
-		logger.info("Have project.properties from environment: {}", environmentProjectPropsFile);
+		logger.info("Have {} from environment: {}", ApplicationConstants.PROJECT_PROPS, environmentProjectPropsFile);
 		URI projectPropsUri = null;
 		if (environmentProjectPropsFile != null) {
 			try {
@@ -249,7 +249,7 @@ public class PdfaConvert {
 			} catch (URISyntaxException e) {
 				// fall back to default file
 				logger.error("Unable to load properties file: {} -- reason: {}", environmentProjectPropsFile, e.getReason());
-				logger.error("Falling back to default project.properties file: {}", ApplicationConstants.PROJECT_PROPS);
+				logger.error("Falling back to default {} file: {}", ApplicationConstants.PROJECT_PROPS, ApplicationConstants.PROJECT_PROPS);
 			}
 		}
 		
@@ -261,7 +261,7 @@ public class PdfaConvert {
 				Reader reader;
 				try {
 					reader = new FileReader(envPropFile);
-					logger.info("About to load project.properties from environment: {}", envPropFile.getAbsolutePath());
+					logger.info("About to load {} from environment: {}", ApplicationConstants.PROJECT_PROPS, envPropFile.getAbsolutePath());
 					applicationProps.load(reader);
 					logger.info("Success -- loaded properties file.");
 				} catch (IOException e) {
